@@ -361,13 +361,17 @@
                         <!-- Filtros -->
                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                             <input type="text" id="filter-citas-search" class="form-control" placeholder="Buscar por cliente o teléfono..." style="width: 240px; padding: 0.45rem 0.85rem;" oninput="ADMIN_APP.filterAppointments()">
-                            <select id="filter-citas-status" class="form-control" style="width: 170px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterAppointments()">
-                                <option value="todas">Todas las Citas</option>
+                            <select id="filter-citas-status" class="form-control" style="width: 190px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterAppointments()">
+                                <option value="todas">📋 Citas Activas</option>
                                 <option value="pendiente">⏳ Pendientes</option>
                                 <option value="confirmada">✅ Confirmadas</option>
                                 <option value="completada">🎉 Completadas</option>
                                 <option value="cancelada">❌ Canceladas</option>
+                                <option value="archivada">📦 Archivadas</option>
                             </select>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('filter-citas-status').value='archivada'; ADMIN_APP.filterAppointments();">
+                                📦 Ver Archivadas
+                            </button>
                         </div>
                     </div>
 

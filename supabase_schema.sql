@@ -117,7 +117,7 @@ CREATE TABLE citas (
                                     'pendiente', 'respondido'
                                 )),
     estado_cita                 VARCHAR(20) NOT NULL DEFAULT 'pendiente' CHECK (estado_cita IN (
-                                    'pendiente', 'confirmada', 'completada', 'cancelada'
+                                    'pendiente', 'confirmada', 'completada', 'cancelada', 'archivada'
                                 )),
     estado_pago                 VARCHAR(20) NOT NULL DEFAULT 'pendiente' CHECK (estado_pago IN (
                                     'pendiente', 'anticipo_50', 'pagado'

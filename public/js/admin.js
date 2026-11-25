@@ -660,10 +660,11 @@ const ADMIN_APP = {
     },
 
     updateAppointmentStats() {
-        const totalCount = this.allAppointments.length;
-        const pendingCount = this.allAppointments.filter(c => c.estado_cita === 'pendiente').length;
-        const confirmedCount = this.allAppointments.filter(c => c.estado_cita === 'confirmada').length;
-        const totalRevenue = this.allAppointments
+        const activeCitas = this.allAppointments.filter(c => c.estado_cita !== 'archivada');
+        const totalCount = activeCitas.length;
+        const pendingCount = activeCitas.filter(c => c.estado_cita === 'pendiente').length;
+        const confirmedCount = activeCitas.filter(c => c.estado_cita === 'confirmada').length;
+        const totalRevenue = activeCitas
             .filter(c => c.estado_cita !== 'cancelada')
             .reduce((sum, c) => sum + (parseFloat(c.total_estimado) || 0), 0);
 
@@ -679,7 +680,9 @@ const ADMIN_APP = {
 
         let filtered = this.allAppointments;
 
-        if (statusFilter !== 'todas') {
+        if (statusFilter === 'todas') {
+            filtered = filtered.filter(c => c.estado_cita !== 'archivada');
+        } else {
             filtered = filtered.filter(c => c.estado_cita === statusFilter);
         }
 
@@ -716,6 +719,11 @@ const ADMIN_APP = {
                 c.metodo_pago === 'sucursal'
             ) {
                 anticipoTag = `<div style="margin-top:0.3rem;"><span style="background:#FFF8E1;color:#E65100;border-radius:6px;padding:1px 8px;font-size:0.75rem;font-weight:700;">💵 Sin anticipo (Pago en sucursal)</span></div>`;
+            } else if (
+                c.metodo_pago === 'transferencia' ||
+                (c.folio_transferencia && c.folio_transferencia.includes('Anticipo vía transferencia'))
+            ) {
+                anticipoTag = `<div style="margin-top:0.3rem;"><span style="background:#E3F2FD;color:#1565C0;border-radius:6px;padding:1px 8px;font-size:0.75rem;font-weight:700;">📲 Anticipo vía transferencia</span></div>`;
             } else if (c.estado_cita === 'pendiente') {
                 if (c.folio_transferencia) {
                     anticipoTag = `<div style="margin-top:0.3rem;"><span style="background:#E8F5E9;color:#2E7D32;border-radius:6px;padding:1px 8px;font-size:0.75rem;font-weight:700;">✅ Folio enviado</span></div>`;
@@ -752,6 +760,7 @@ const ADMIN_APP = {
                             <option value="confirmada" ${c.estado_cita === 'confirmada' ? 'selected' : ''}>✅ Confirmada</option>
                             <option value="completada" ${c.estado_cita === 'completada' ? 'selected' : ''}>🎉 Completada</option>
                             <option value="cancelada" ${c.estado_cita === 'cancelada' ? 'selected' : ''}>❌ Cancelada</option>
+                            <option value="archivada" ${c.estado_cita === 'archivada' ? 'selected' : ''}>📦 Archivada</option>
                         </select>
                         ${anticipoTag}
                     </td>

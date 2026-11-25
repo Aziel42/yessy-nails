@@ -208,10 +208,12 @@ function applyPreselectedService() {
    4. TARJETAS DE MÉTODO DE PAGO Y PANELES DINÁMICOS
    ---------------------------------------------------------------- */
 let speiDataLoaded = false;
+let speiModalConfirmed = false;
 
 function onPaymentChange() {
     const checked = document.querySelector('input[name="metodo_pago"]:checked');
     const val = checked ? checked.value : 'efectivo';
+    speiModalConfirmed = false;
 
     const panelSucursal = document.getElementById('panel-sucursal');
     const panelSpei     = document.getElementById('panel-spei');
@@ -230,22 +232,51 @@ async function loadSpeiData() {
     const loadingEl = document.getElementById('spei-loading');
     const infoEl    = document.getElementById('spei-info');
     try {
-        const res = await fetch('/api/config');
+        const res = await fetch('/api/configuracion');
         const json = await res.json();
         const cfg = json.data || {};
+        const banco   = cfg.banco_transferencia   || 'Banco no configurado';
+        const titular = cfg.titular_transferencia || 'Titular no configurado';
+        const clabe   = cfg.clabe_transferencia   || '—';
+
         if (loadingEl) loadingEl.style.display = 'none';
         if (infoEl)    infoEl.style.display    = 'block';
         const bancoEl   = document.getElementById('spei-banco');
         const titularEl = document.getElementById('spei-titular');
         const clabeEl   = document.getElementById('spei-clabe');
-        if (bancoEl)   bancoEl.textContent   = cfg.banco_transferencia   || 'Banco no configurado';
-        if (titularEl) titularEl.textContent = cfg.titular_transferencia || 'Titular no configurado';
-        if (clabeEl)   clabeEl.textContent   = cfg.clabe_transferencia   || '—';
+        if (bancoEl)   bancoEl.textContent   = banco;
+        if (titularEl) titularEl.textContent = titular;
+        if (clabeEl)   clabeEl.textContent   = clabe;
+
+        const mBanco   = document.getElementById('spei-modal-banco');
+        const mTitular = document.getElementById('spei-modal-titular');
+        const mClabe   = document.getElementById('spei-modal-clabe');
+        if (mBanco)   mBanco.textContent   = banco;
+        if (mTitular) mTitular.textContent = titular;
+        if (mClabe)   mClabe.textContent   = clabe;
+
         speiDataLoaded = true;
     } catch (e) {
         if (loadingEl) {
             loadingEl.textContent = 'No se pudieron cargar los datos bancarios. Escríbenos por WhatsApp.';
         }
+    }
+}
+
+async function openSpeiModal() {
+    if (!speiDataLoaded) {
+        await loadSpeiData();
+    }
+    const overlay = document.getElementById('spei-modal-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function closeSpeiModal() {
+    const overlay = document.getElementById('spei-modal-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
     }
 }
 
@@ -278,11 +309,11 @@ function validateCardFields() {
     return { valid: true, last4: num.slice(-4) };
 }
 
-window.copyClabe = function copyClabe() {
-    const clabe = document.getElementById('spei-clabe')?.textContent;
+window.copyClabe = function copyClabe(sourceId = 'spei-clabe', btnEl = null) {
+    const clabe = document.getElementById(sourceId)?.textContent;
     if (clabe && clabe !== '—') {
         navigator.clipboard.writeText(clabe).then(() => {
-            const btn = document.getElementById('btn-copy-clabe');
+            const btn = btnEl || document.getElementById('btn-copy-clabe');
             if (btn) {
                 btn.textContent = '✅ Copiado';
                 setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
@@ -388,11 +419,30 @@ function initAppointmentForm() {
     const form = document.getElementById('appointment-form');
     if (!form) return;
 
+    const btnAcceptSpei = document.getElementById('btn-accept-spei');
+    const btnCancelSpei = document.getElementById('btn-cancel-spei');
+    const speiOverlay   = document.getElementById('spei-modal-overlay');
+
+    if (btnAcceptSpei) {
+        btnAcceptSpei.addEventListener('click', () => {
+            speiModalConfirmed = true;
+            closeSpeiModal();
+            form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
+        });
+    }
+    if (btnCancelSpei) {
+        btnCancelSpei.addEventListener('click', closeSpeiModal);
+    }
+    if (speiOverlay) {
+        speiOverlay.addEventListener('click', (ev) => {
+            if (ev.target === speiOverlay) closeSpeiModal();
+        });
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const btnSubmit = document.getElementById('btn-submit-booking');
-        const alertBox = document.getElementById('booking-alert');
         const selectServicio = document.getElementById('servicio_id');
 
         // Validaciones
@@ -407,6 +457,12 @@ function initAppointmentForm() {
 
         if (!nombreCliente || !telefonoCliente || !correoCliente || !servicioId || !fechaCita || !horaCita) {
             showAlert('Por favor llena todos los campos obligatorios (*), incluyendo tu correo electrónico.', 'error');
+            return;
+        }
+
+        // Si eligió Transferencia SPEI y aún no confirmó el modal de datos bancarios, mostrarlo primero
+        if (metodoPago === 'transferencia' && !speiModalConfirmed) {
+            await openSpeiModal();
             return;
         }
 

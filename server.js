@@ -25,6 +25,7 @@ import clienteRoutes    from './src/routes/cliente.routes.js';
 
 // Middlewares de error
 import { errorMiddleware, notFoundMiddleware } from './src/middlewares/error.middleware.js';
+import { startAppointmentLifecycleScheduler } from './src/services/appointmentLifecycle.service.js';
 
 // ── Configuración de rutas de archivos (ES Modules) ─────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -85,7 +86,8 @@ app.use((req, _res, next) => {
 });
 
 // ── Montar rutas de la API ──────────────────────────────────────
-app.use('/api/config',      configRoutes);
+app.use('/api/config',        configRoutes);
+app.use('/api/configuracion', configRoutes);
 app.use('/api/servicios',   serviceRoutes);
 app.use('/api/portafolio',  portfolioRoutes);
 app.use('/api/citas',       appointmentRoutes);
@@ -138,6 +140,7 @@ function startServer() {
         console.log('   🗄️  Base de datos: Supabase (PostgreSQL)');
         console.log(`   🕐 ${new Date().toLocaleString('es-MX')}`);
         console.log('✨ ═══════════════════════════════════════════\n');
+        startAppointmentLifecycleScheduler();
     });
 }
 

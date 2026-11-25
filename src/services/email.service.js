@@ -182,8 +182,13 @@ export function buildAppointmentClientEmail(cita, servicioNombre) {
 }
 
 export function buildAppointmentAdminEmail(cita, servicioNombre) {
+    const esTransferencia = cita.metodo_pago === 'transferencia';
+    const intro = esTransferencia
+        ? `<p>Se agendó una <strong>nueva cita con pago vía transferencia SPEI</strong>:</p>`
+        : `<p>Entró una <strong>nueva cita</strong> al sistema:</p>`;
+
     const body = `
-      <p>Entró una <strong>nueva cita</strong> al sistema:</p>
+      ${intro}
       <ul style="font-size:14px;line-height:1.7;">
         <li><strong>Folio:</strong> #${cita.id}</li>
         <li><strong>Clienta:</strong> ${cita.nombre_cliente}</li>
@@ -191,12 +196,15 @@ export function buildAppointmentAdminEmail(cita, servicioNombre) {
         <li><strong>Correo:</strong> ${cita.correo_cliente || '-'}</li>
         <li><strong>Servicio:</strong> ${servicioNombre || 'Servicio en salón'}</li>
         <li><strong>Fecha:</strong> ${formatDateMx(cita.fecha_cita)} a las ${cita.hora_cita}</li>
-        <li><strong>Método de pago:</strong> ${cita.metodo_pago || '-'}</li>
-        <li><strong>Folio de anticipo:</strong> ${cita.folio_transferencia || 'No enviado'}</li>
+        <li><strong>Método de pago:</strong> ${esTransferencia ? 'Transferencia SPEI' : (cita.metodo_pago || '-')}</li>
+        <li><strong>Estado / Folio de anticipo:</strong> ${cita.folio_transferencia || 'No enviado'}</li>
       </ul>
       <p style="font-size:13px;color:#8A7A76;">Confirma o gestiona la cita desde el panel /admin.</p>
     `;
-    return { subject: `📅 Nueva cita #${cita.id} — ${cita.nombre_cliente}`, html: wrapEmail('Nueva cita registrada', body) };
+    const subject = esTransferencia
+        ? `📲 Nueva cita vía Transferencia #${cita.id} — ${cita.nombre_cliente}`
+        : `📅 Nueva cita #${cita.id} — ${cita.nombre_cliente}`;
+    return { subject, html: wrapEmail(esTransferencia ? 'Nueva cita vía transferencia' : 'Nueva cita registrada', body) };
 }
 
 export function buildAppointmentCancelledEmail(cita, motivo = '') {

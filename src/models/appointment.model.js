@@ -146,7 +146,7 @@ export async function checkAvailability(fecha, hora, excludeId = null) {
  * Cancela las citas en estado 'pendiente' cuya clienta aún no ha enviado
  * folio de anticipo y que superan el límite de horas configurado.
  * Excluye explícitamente citas con pago en sucursal ('efectivo' / 'sucursal')
- * o marcadas como 'Sin anticipo (Pago en sucursal)'.
+ * y transferencia ('transferencia'), aplicando solo a tarjeta no confirmada.
  * @param {number} hoursLimit - Horas máximas para confirmar
  * @returns {Promise<Array>} Citas canceladas (con correo_cliente para notificaciones)
  */
@@ -160,13 +160,46 @@ export async function autoCancelExpired(hoursLimit = 24) {
         .eq('estado_cita', 'pendiente')
         .eq('estado_confirmacion_cliente', 'pendiente')
         .is('folio_transferencia', null)
-        .not('metodo_pago', 'in', '("efectivo","sucursal")')
-        .neq('estado_pago', 'Sin anticipo (Pago en sucursal)')
+        .not('metodo_pago', 'in', '("efectivo","sucursal","transferencia")')
+        .not('estado_pago', 'in', '("Sin anticipo (Pago en sucursal)","Anticipo vía transferencia")')
         .lt('fecha_creacion', cutoff)
         .select('id, nombre_cliente, correo_cliente, fecha_cita, hora_cita');
 
     if (error) throw new Error(error.message);
     return data || [];
+}
+
+/**
+ * Archiva citas cuya fecha ya pasó hace 7 días o más y aún no están archivadas.
+ * @param {string} cutoffDate - Fecha límite YYYY-MM-DD
+ * @returns {Promise<number>} Cantidad de citas archivadas
+ */
+export async function archiveOldAppointments(cutoffDate) {
+    const { data, error } = await supabaseAdmin
+        .from(TABLE)
+        .update({ estado_cita: 'archivada' })
+        .lte('fecha_cita', cutoffDate)
+        .neq('estado_cita', 'archivada')
+        .select('id');
+
+    if (error) throw new Error(error.message);
+    return (data || []).length;
+}
+
+/**
+ * Elimina definitivamente citas cuya fecha tiene 30 días o más de antigüedad.
+ * @param {string} cutoffDate - Fecha límite YYYY-MM-DD
+ * @returns {Promise<number>} Cantidad de citas eliminadas
+ */
+export async function deleteExpiredAppointments(cutoffDate) {
+    const { data, error } = await supabaseAdmin
+        .from(TABLE)
+        .delete()
+        .lte('fecha_cita', cutoffDate)
+        .select('id');
+
+    if (error) throw new Error(error.message);
+    return (data || []).length;
 }
 
 /**
@@ -188,5 +221,6 @@ export async function getTodayAppointments() {
 export default {
     getAllAppointments, getAppointmentById, createAppointment,
     updateAppointment, deleteAppointment, checkAvailability,
-    getTodayAppointments, autoCancelExpired
+    getTodayAppointments, autoCancelExpired,
+    archiveOldAppointments, deleteExpiredAppointments
 };

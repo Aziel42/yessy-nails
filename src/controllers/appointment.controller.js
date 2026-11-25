@@ -182,6 +182,14 @@ export async function create(req, res) {
             ? (metodoRaw === 'sucursal' ? 'efectivo' : metodoRaw)
             : 'efectivo';
         const esPagoEnSucursal = metodoPago === 'efectivo';
+        const esTransferencia = metodoPago === 'transferencia';
+
+        let folioFinal = folio || null;
+        if (esPagoEnSucursal) {
+            folioFinal = 'Sin anticipo (Pago en sucursal)';
+        } else if (esTransferencia) {
+            folioFinal = folio ? `Anticipo vía transferencia (${folio})` : 'Anticipo vía transferencia';
+        }
 
         const data = {
             ...req.body,
@@ -192,7 +200,7 @@ export async function create(req, res) {
             hora_cita,
             servicio_id,
             metodo_pago: metodoPago,
-            folio_transferencia: esPagoEnSucursal ? 'Sin anticipo (Pago en sucursal)' : (folio || null),
+            folio_transferencia: folioFinal,
             anticipo_requerido: esPagoEnSucursal ? 0 : (req.body.anticipo_requerido != null ? req.body.anticipo_requerido : 50),
             estado_pago: 'pendiente',
             total_estimado: req.body.total_estimado || servicio.precio_base
