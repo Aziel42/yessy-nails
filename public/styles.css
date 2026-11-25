@@ -71,6 +71,8 @@
 html {
     scroll-behavior: smooth;
     font-size: 16px;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 body {
@@ -80,6 +82,7 @@ body {
     line-height: 1.65;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    max-width: 100%;
     position: relative;
 }
 
@@ -104,6 +107,63 @@ button, input, textarea, select {
     font-size: inherit;
     border: none;
     outline: none;
+}
+
+/* ── Campos de formulario: visibles, sin desbordamiento ───────── */
+input, select, textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1.5px solid #cbb3be;
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    color: var(--color-text);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.22);
+}
+
+select {
+    cursor: pointer;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.22);
+}
+
+/* Excluir elementos de UI que no son campos de texto */
+input[type="radio"],
+input[type="checkbox"] {
+    width: auto;
+    max-width: none;
+    border: none;
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+input[type="radio"]:focus,
+input[type="checkbox"]:focus {
+    box-shadow: none;
+    border: none;
+}
+
+button {
+    cursor: pointer;
+    width: auto;
+    max-width: none;
+    box-sizing: border-box;
 }
 
 .container {
@@ -235,6 +295,8 @@ h1, h2, h3, h4, h5 {
     top: 0;
     left: 0;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     height: var(--header-height);
     background: var(--color-surface-translucent);
     backdrop-filter: blur(14px);
@@ -859,9 +921,7 @@ h1, h2, h3, h4, h5 {
     flex: 1;
     min-width: 220px;
     padding: 0.7rem 1rem;
-    border: 1.5px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: #FFFFFF;
+    /* Hereda border, background y border-radius del reset global de inputs */
 }
 
 /* ----------------------------------------------------------------
@@ -2525,11 +2585,9 @@ h1, h2, h3, h4, h5 {
     width: 100%;
     padding: 0.85rem 1.15rem;
     border-radius: var(--radius-md);
-    border: 1.5px solid var(--color-border);
-    background: #FFFFFF;
+    /* border, background y border-radius base vienen del reset global */
     color: var(--color-text);
     font-size: 0.92rem;
-    transition: var(--transition);
 }
 
 .chat-input-control:focus {
@@ -2679,6 +2737,12 @@ h1, h2, h3, h4, h5 {
     display: flex;
     align-items: center;
     gap: 0.6rem;
+}
+
+/* Input de envío en la barra del chat: border-radius compacto */
+.chat-footer-form .chat-input-control {
+    border-radius: var(--radius-full);
+    padding: 0.65rem 1rem;
 }
 
 .chat-send-btn {
