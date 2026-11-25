@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Yessy Nails — Salón de uñas profesional de Yessica Marlen Calderón Luna. Especialistas en acrílico esculpido, gelish, soft gel, polygel y diseños artísticos.">
+    <title>Yessy Nails 💅 — Salón de Uñas Profesional</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Yessy Nails — Salón de Uñas Profesional">
+    <meta property="og:description" content="Especialistas en acrílico esculpido, gelish, soft gel, polygel y diseños artísticos en Ecatepec de Morelos. 8 años de experiencia, 100% garantizado.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yessyNails.com/">
+    <meta property="og:image" content="https://yessyNails.com/img/yessica.jpg">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Yessy Nails">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Leaflet.js + OpenStreetMap (mapas interactivos gratuitos) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+    <!-- ============================================================
+         HEADER & NAVEGACIÓN RESPONSIVA
+         ============================================================ -->
+    <header class="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="brand-logo" aria-label="Inicio Yessy Nails">
+                <span class="brand-icon">💅</span>
+                Yessy <span>Nails</span>
+            </a>
+
+            <!-- Navegación -->
+            <nav class="main-nav" aria-label="Navegación principal">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link active">Inicio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
+                    <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
+                    <li><a href="pedidos.html" class="nav-link">Pedidos</a></li>
+                </ul>
+
+                <div class="header-cta">
+                    <a href="agendar.html" class="btn btn-primary btn-sm">Agendar Cita ✨</a>
+                </div>
+            </nav>
+
+            <!-- Botón Hamburguesa Móvil -->
+            <button class="menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+
+    <!-- ============================================================
+         HERO BANNER DINÁMICO (GET /api/config)
+         ============================================================ -->
+    <section class="hero-section" id="hero-section" style="background-image: url('https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1920&q=80');">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <span class="hero-badge">✨ Salón Profesional de Uñas & Nail Art</span>
+                <h1 class="hero-title" id="hero-title">Yessy <span>Nails</span> ✨</h1>
+                <p class="hero-subtitle" id="hero-subtitle">
+                    Diseño y arte en cada detalle. Transformamos tus manos en una obra de arte con técnicas de vanguardia, productos premium y la máxima higiene.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="#contacto" class="btn btn-primary">Agendar Cita Ahora 💅</a>
+                    <a href="#servicios" class="btn btn-outline">Ver Servicios & Costos</a>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="dyn-years-exp">8+ Años</span>
+                        <span class="stat-label">De Experiencia</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">1,200+</span>
+                        <span class="stat-label">Sets Realizados</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Esterilizado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         BLOQUE DE PROMOCIÓN DEL MES (EDITABLE DESDE /admin)
+         ============================================================ -->
+    <section class="promo-section" id="promo-section">
+        <div class="container">
+            <div class="promo-card">
+                <span class="section-tag">Promoción del Mes</span>
+                <h2 id="promo-title">Promoción de Diciembre</h2>
+                <p id="promo-text">Uñas acrílicas desde $250 MXN, de 1 a 3 tonos hasta el número 3.</p>
+                <a href="agendar.html" class="btn btn-primary">Aprovechar Promoción ✨</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         RESUMEN DE SERVICIOS ESTRELLA
+         ============================================================ -->
+    <section class="services-section" id="servicios">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Nuestras Especialidades</span>
+                <h2>Servicios Estrella</h2>
+                <p>Aplicaciones profesionales adaptadas a tu estilo de vida, salud ungueal y ocasión especial.</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <!-- Contenedor cargado dinámicamente con fallback inicial -->
+            <div class="services-grid" id="featured-services-container">
+                <!-- Uñas Acrílicas (Promo del Mes) -->
+                <article class="service-card">
+                    <div>
+                        <div class="service-header">
+                            <span class="service-badge">Acrílico</span>
+                            <span class="service-duration">⏱️ 120 min</span>
+                        </div>
+                        <h3 class="service-title">Uñas Acrílicas (Promo del Mes)</h3>
+                        <p class="service-desc">Aplicación completa de acrílico esculpido con diseño de 1 a 3 tonos hasta el número 3. Promo del mes: desde $250 MXN.</p>
+                    </div>
+                    <div class="service-footer">
+                        <div class="service-price">
+                            <span class="service-price-label">Desde</span>
+                            <span class="service-price-amount">$250.00 MXN</span>
+                        </div>
+                        <a href="#contacto" class="btn btn-secondary btn-sm">Agendar</a>
+                    </div>
+                </article>
+
+                <!-- Pedispa Completo -->
+                <article class="service-card">
+                    <div>
+                        <div class="service-header">
+                            <span class="service-badge">Pedicure/Spa</span>
+                            <span class="service-duration">⏱️ 90 min</span>
+                        </div>
+                        <h3 class="service-title">Pedispa Completo</h3>
+                        <p class="service-desc">Exfoliación, cuadratura, masaje relajante, removedor de callosidad y células muertas, y gel semipermanente de 1 a 3 tonos.</p>
+                    </div>
+                    <div class="service-footer">
+                        <div class="service-price">
+                            <span class="service-price-label">Desde</span>
+                            <span class="service-price-amount">$320.00 MXN</span>
+                        </div>
+                        <a href="#contacto" class="btn btn-secondary btn-sm">Agendar</a>
+                    </div>
+                </article>
+
+                <!-- Planchado y Perfilado de Ceja -->
+                <article class="service-card">
+                    <div>
+                        <div class="service-header">
+                            <span class="service-badge">Cejas</span>
+                            <span class="service-duration">⏱️ 30 min</span>
+                        </div>
+                        <h3 class="service-title">Planchado y Perfilado de Ceja</h3>
+                        <p class="service-desc">Planchado con queratina y perfilado profesional para unas cejas alineadas, definidas y con acabado natural.</p>
+                    </div>
+                    <div class="service-footer">
+                        <div class="service-price">
+                            <span class="service-price-label">Precio</span>
+                            <span class="service-price-amount">$150.00 MXN</span>
+                        </div>
+                        <a href="#contacto" class="btn btn-secondary btn-sm">Agendar</a>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         MUESTRA DEL PORTAFOLIO (3 TRABAJOS RECIENTES)
+         ============================================================ -->
+    <section class="portfolio-section" id="portafolio">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Galería de Arte</span>
+                <h2>Últimas Creaciones</h2>
+                <p>Una muestra del detalle, precisión y armonía que plasmamos en cada set.</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="portfolio-grid" id="recent-portfolio-container">
+                <!-- Trabajo 1 -->
+                <article class="portfolio-card">
+                    <div class="portfolio-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80" 
+                             alt="Rosa Millennial Minimalista" 
+                             class="portfolio-img" 
+                             loading="lazy">
+                        <span class="portfolio-badge">Minimalista</span>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3 class="portfolio-title">Rosa Millennial Minimalista</h3>
+                        <p class="portfolio-desc">Set almendra en tono rosa nude con líneas finas doradas y acentos sutiles de elegancia cotidiana.</p>
+                    </div>
+                </article>
+
+                <!-- Trabajo 2 -->
+                <article class="portfolio-card">
+                    <div class="portfolio-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80" 
+                             alt="Mariposas 3D Encapsuladas" 
+                             class="portfolio-img" 
+                             loading="lazy">
+                        <span class="portfolio-badge">3D</span>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3 class="portfolio-title">Mariposas 3D Encapsuladas</h3>
+                        <p class="portfolio-desc">Mariposas tornasol tridimensionales atrapadas en gel cristal con destellos de glitter holográfico.</p>
+                    </div>
+                </article>
+
+                <!-- Trabajo 3 -->
+                <article class="portfolio-card">
+                    <div class="portfolio-img-wrap">
+                        <img src="https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80" 
+                             alt="Francés Clásico Reinventado" 
+                             class="portfolio-img" 
+                             loading="lazy">
+                        <span class="portfolio-badge">Francés</span>
+                    </div>
+                    <div class="portfolio-info">
+                        <h3 class="portfolio-title">Francés Clásico Reinventado</h3>
+                        <p class="portfolio-desc">French tip en forma almendra con sonrisa en dorado cromado y base translúcida de efecto rubor.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         TARJETA DE PRESENTACIÓN DE YESSICA MARLEN CALDERÓN LUNA
+         ============================================================ -->
+    <section class="about-preview-section">
+        <div class="container">
+            <div class="about-card-container">
+                <!-- Foto -->
+                <div class="about-card-photo">
+                    <img src="img/yessica.jpg" 
+                         alt="Yessica Marlen Calderón Luna" 
+                         class="about-card-img" 
+                         loading="lazy">
+                    <div class="about-photo-badge">
+                        <h4>Yessica Calderón</h4>
+                        <p>Master Nail Artist</p>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="about-card-body">
+                    <span class="section-tag">Conoce a tu artista</span>
+                    <h3>Yessica Marlen Calderón Luna</h3>
+                    <div class="artist-role">Fundadora & Master Nail Designer en Yessy Nails</div>
+                    <p id="dyn-bio">
+                        Soy Yessica Marlen Calderón Luna, nail artist profesional certificada. Me apasiona transformar las manos de cada clienta en una obra de arte única. Especializada en técnicas de acrílico esculpido, gelish premium y diseños artísticos personalizados. Cada set de uñas que creo es pensado especialmente para ti, combinando las últimas tendencias con tu estilo personal.
+                    </p>
+
+                    <div class="about-card-highlights">
+                        <div class="highlight-box">
+                            <span class="highlight-icon">🏆</span>
+                            <div class="highlight-text">
+                                <strong>Certificación Master</strong>
+                                <span>Estructuras esculturales</span>
+                            </div>
+                        </div>
+                        <div class="highlight-box">
+                            <span class="highlight-icon">🧼</span>
+                            <div class="highlight-text">
+                                <strong>Bioseguridad Clínica</strong>
+                                <span>Instrumental esterilizado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <a href="perfil.html" class="btn btn-secondary">
+                            Conoce mi trayectoria y certificaciones →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         BLOQUE DE UBICACIÓN RÁPIDA & CONTACTO
+         ============================================================ -->
+    <section class="location-section" id="ubicacion">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Visítanos</span>
+                <h2>Ubicación y Horarios</h2>
+                <p>Te esperamos en un espacio diseñado para tu descanso, confort y belleza.</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="location-grid">
+                <!-- Información -->
+                <div class="location-info">
+                    <div class="info-item">
+                        <div class="info-icon">📍</div>
+                        <div class="info-details">
+                            <h4>Dirección del Salón</h4>
+                            <p class="dyn-address">Las Américas (Av. Ignacio López Rayón entre Simón Bolívar y límite con Jardines de Morelos, Mz 42 Lt 5), Ecatepec de Morelos, Estado de México</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">🕐</div>
+                        <div class="info-details">
+                            <h4>Horario de Atención</h4>
+                            <p class="dyn-schedule">Lunes a Viernes: 10:00 AM – 7:00 PM | Sábado: 9:00 AM – 4:00 PM | Domingo: Cerrado</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon">💬</div>
+                        <div class="info-details">
+                            <h4>Citas por WhatsApp</h4>
+                            <p>Escríbenos directamente para consultar disponibilidad inmediata:</p>
+                            <p style="margin-top: 0.35rem;">
+                                <a href="https://wa.me/5215587431290?text=Hola%20Yessica,%20quiero%20agendar%20una%20cita%20💅" 
+                                   class="dyn-whatsapp-link dyn-phone-text text-primary" 
+                                   style="font-weight: 700;" 
+                                   target="_blank" 
+                                   rel="noopener">
+                                   +52 1 55 8743 1290
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;" id="contacto">
+                        <a href="https://wa.me/5215587431290?text=Hola%20Yessica,%20quiero%20agendar%20mi%20cita%20en%20Yessy%20Nails%20💅" 
+                           class="btn btn-primary dyn-whatsapp-link" 
+                           target="_blank" 
+                           rel="noopener">
+                            📲 Agendar Cita por WhatsApp
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mapa interactivo (Leaflet + OpenStreetMap) -->
+                <div>
+                    <div class="location-search-bar">
+                        <input type="text" id="dyn-map-search" class="form-control" placeholder="Busca una dirección o punto de referencia…" aria-label="Buscar dirección en el mapa">
+                        <button type="button" id="dyn-map-search-btn" class="btn btn-secondary btn-sm">🔎 Buscar</button>
+                    </div>
+                    <div class="location-map-wrap">
+                        <div id="dyn-map" class="leaflet-map" aria-label="Mapa de ubicación de Yessy Nails"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         BANNER CTA GLOBAL
+         ============================================================ -->
+    <section class="cta-banner-section">
+        <div class="container">
+            <div class="cta-banner-content">
+                <h2>¿Lista para lucir unas uñas espectaculares?</h2>
+                <p>Regálate el momento que mereces. Agenda hoy tu cita y déjate consentir por expertas en arte en uñas.</p>
+                <a href="#contacto" class="btn btn-primary dyn-whatsapp-link">
+                    ✨ Reservar Mi Cita Ahora
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER ELEGANTE
+         ============================================================ -->
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <span class="brand-icon">💅</span>
+                        Yessy <span>Nails</span>
+                    </div>
+                    <p>Diseño, técnica y cuidado profesional para tus manos. Salón exclusivo fundado por Yessica Marlen Calderón Luna en la Ciudad de México.</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Enlaces Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="servicios.html">Servicios y Costos</a></li>
+                        <li><a href="portafolio.html">Portafolio</a></li>
+                        <li><a href="perfil.html">Sobre Yessy</a></li>
+                        <li><a href="ubicacion.html">Ubicación</a></li>
+                        <li><a href="chat.html">Chat en Vivo</a></li>
+                        <li><a href="pedidos.html">Pedidos</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Servicios</h4>
+                    <ul class="footer-links">
+                        <li><a href="#servicios">Acrílico Esculpido</a></li>
+                        <li><a href="#servicios">Gelish Tradicional</a></li>
+                        <li><a href="#servicios">Soft Gel Tips</a></li>
+                        <li><a href="#servicios">Polygel Dual System</a></li>
+                        <li><a href="#servicios">Retiro & Mantenimiento</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Contacto</h4>
+                    <ul class="footer-contact">
+                        <li><span>📍</span> <span class="dyn-address">Av. Ignacio López Rayón, Las Américas, Ecatepec de Morelos, Edomex</span></li>
+                        <li><span>💬</span> <a href="https://wa.me/5215587431290" class="dyn-whatsapp-link dyn-phone-text">+52 1 55 8743 1290</a></li>
+                        <li><span>🕐</span> <span class="dyn-schedule">Lun-Vie: 10am-7pm | Sáb: 9am-4pm</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Yessy Nails — Todos los derechos reservados. Diseñado para Yessica Marlen Calderón Luna. <a href="admin.html" style="color: inherit; opacity: 0.7; text-decoration: underline; margin-left: 0.5rem;">🔒 Acceso Admin</a></p>
+                <p>Estética & Bioseguridad Profesional</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón Flotante WhatsApp -->
+    <a href="https://wa.me/5215587431290?text=Hola%20Yessy%20Nails,%20me%20gustaría%20agendar%20una%20cita%20💅" 
+       class="whatsapp-float dyn-whatsapp-link" 
+       target="_blank" 
+       rel="noopener" 
+       aria-label="Contactar por WhatsApp">
+        💬
+    </a>
+
+    <!-- ============================================================
+         REGISTRO LIGERO: "RECIBE NUESTRAS PROMOCIONES DEL MES"
+         ============================================================ -->
+    <section class="promo-subscribe-section" id="suscribirse" style="
+        background: linear-gradient(135deg, #FBF0F3 0%, #FDF7EF 100%);
+        padding: 3rem 0;
+        border-top: 1px solid #F3D9E0;">
+        <div class="container">
+            <div style="max-width: 540px; margin: 0 auto; text-align: center;">
+                <span class="section-tag">Suscríbete gratis</span>
+                <h2 style="margin: 0.5rem 0 0.75rem; font-size: 1.7rem;">Recibe nuestras promociones del mes 💅</h2>
+                <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 1.75rem;">
+                    Déjanos tu nombre y correo y te avisaremos de ofertas exclusivas antes que nadie. Sin spam, solo lo bueno.
+                </p>
+
+                <div id="subscribe-alert" style="display:none; padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.92rem;"></div>
+
+                <form id="subscribe-form" novalidate style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <input type="text" id="sub-nombre" name="nombre" class="form-control"
+                               placeholder="Tu nombre" required
+                               style="flex: 1 1 160px; min-width: 160px;">
+                        <input type="email" id="sub-correo" name="correo" class="form-control"
+                               placeholder="tu@correo.com" required
+                               style="flex: 2 1 200px; min-width: 200px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btn-subscribe" style="width: 100%; font-size: 1rem; padding: 0.9rem;">
+                        ✨ Suscribirme a las Promociones
+                    </button>
+                    <p style="font-size: 0.78rem; color: var(--color-text-muted); margin: 0;">
+                        Puedes darte de baja en cualquier momento escribiéndonos. No compartimos tus datos.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/chat.js"></script>
+    <script>
+    // ── Registro ligero de clientas desde index.html ─────────────
+    (function () {
+        const form = document.getElementById('subscribe-form');
+        if (!form) return;
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const nombre = document.getElementById('sub-nombre').value.trim();
+            const correo = document.getElementById('sub-correo').value.trim();
+            const alertBox = document.getElementById('subscribe-alert');
+            const btn = document.getElementById('btn-subscribe');
+
+            if (!nombre || !correo) {
+                showSubAlert('Por favor ingresa tu nombre y correo.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Registrando...';
+
+            try {
+                const res = await fetch('/api/clientes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, correo, acepta_promociones: true })
+                });
+                const json = await res.json();
+
+                if (json.success) {
+                    showSubAlert('¡Gracias ' + nombre.split(' ')[0] + '! Ya estás suscrita. 💕 Te avisaremos de las próximas promos.', 'success');
+                    form.reset();
+                } else {
+                    showSubAlert(json.message || 'No pudimos registrarte. Intenta de nuevo.', 'error');
+                }
+            } catch (_) {
+                showSubAlert('Error de conexión. Intenta más tarde.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✨ Suscribirme a las Promociones';
+            }
+        });
+
+        function showSubAlert(msg, type) {
+            const el = document.getElementById('subscribe-alert');
+            if (!el) return;
+            el.style.display = 'block';
+            if (type === 'success') {
+                el.style.background = '#E8F5E9'; el.style.color = '#2E7D32'; el.style.border = '1px solid #A5D6A7';
+            } else {
+                el.style.background = '#FFEBEE'; el.style.color = '#C62828'; el.style.border = '1px solid #FFCDD2';
+            }
+            el.textContent = msg;
+        }
+    })();
+    </script>
+</body>
+</html>

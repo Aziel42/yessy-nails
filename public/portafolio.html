@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portafolio exclusivo de Yessy Nails — Galería de diseños en acrílico, gelish, 3D, francés y estilos de temporada creados por Yessica Marlen Calderón Luna.">
+    <title>Portafolio de Diseños 💅 — Yessy Nails</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Portafolio de Diseños — Yessy Nails">
+    <meta property="og:description" content="Galería exclusiva de diseños en acrílico, 3D, francés y temporada creados por Yessica Marlen Calderón Luna. Haz clic para pedir tu diseño favorito.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yessyNails.com/portafolio.html">
+    <meta property="og:image" content="https://yessyNails.com/img/diseno-01.jpg">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Yessy Nails">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ============================================================
+         HEADER & NAVEGACIÓN RESPONSIVA
+         ============================================================ -->
+    <header class="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="brand-logo" aria-label="Inicio Yessy Nails">
+                <span class="brand-icon">💅</span>
+                Yessy <span>Nails</span>
+            </a>
+
+            <!-- Navegación -->
+            <nav class="main-nav" aria-label="Navegación principal">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Inicio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li><a href="portafolio.html" class="nav-link active">Portafolio</a></li>
+                    <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
+                    <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
+                    <li><a href="pedidos.html" class="nav-link">Pedidos</a></li>
+                </ul>
+
+                <div class="header-cta">
+                    <a href="https://wa.me/5215587431290?text=Hola%20Yessica,%20quiero%20agendar%20una%20cita%20💅" 
+                       class="btn btn-primary btn-sm dyn-whatsapp-link" 
+                       target="_blank" 
+                       rel="noopener">
+                        Agendar Cita ✨
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Botón Hamburguesa Móvil -->
+            <button class="menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+
+    <!-- ============================================================
+         HERO DEL PORTAFOLIO
+         ============================================================ -->
+    <section class="portfolio-hero">
+        <div class="container">
+            <span class="section-tag">Galería de Autor</span>
+            <h1>Portafolio de Diseños Exclusivos</h1>
+            <p>Cada uña es una obra de arte irrepetible. Explora nuestras colecciones por estilo y haz clic en cualquier set para pedirlo directamente por WhatsApp.</p>
+
+            <!-- Botones de Filtro Dinámico por Estilo (sin recarga) -->
+            <div class="portfolio-filters-wrap" role="tablist" aria-label="Filtro de estilos de portafolio">
+                <button type="button" class="portfolio-filter-btn active" data-style="todos">✨ Todos los Sets</button>
+                <button type="button" class="portfolio-filter-btn" data-style="Minimalista">Minimalista</button>
+                <button type="button" class="portfolio-filter-btn" data-style="3D">Arte 3D & Relieve</button>
+                <button type="button" class="portfolio-filter-btn" data-style="Francés">Francés Moderno</button>
+                <button type="button" class="portfolio-filter-btn" data-style="Temporada">Colección Temporada</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CUADRÍCULA (GRID) INTERACTIVA DE TRABAJOS
+         ============================================================ -->
+    <section class="portfolio-section" style="padding-top: 0;">
+        <div class="container">
+            <div class="portfolio-grid-interactive" id="portfolio-interactive-grid">
+                <!-- Carga dinámica vía GET /api/portafolio por portafolio.js -->
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; color: var(--color-text-muted);">
+                    <p>Cargando galería de arte en uñas...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         MODAL DE DETALLE DE DISEÑO + WHATSAPP DIRECTO
+         ============================================================ -->
+    <div class="portfolio-modal-overlay" id="portfolio-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="portfolio-modal-dialog">
+            <!-- Botón de Cierre -->
+            <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Cerrar ventana">
+                ✕
+            </button>
+
+            <!-- Columna Izquierda: Imagen Ampliada -->
+            <div class="modal-image-col">
+                <img src="" alt="" id="modal-img">
+            </div>
+
+            <!-- Columna Derecha: Detalle y CTA -->
+            <div class="modal-info-col">
+                <div class="modal-header-info">
+                    <span class="modal-badge" id="modal-badge">Estilo</span>
+                    <h2 class="modal-title" id="modal-title">Título del Diseño</h2>
+                    <p class="modal-desc" id="modal-desc">Descripción del diseño de autor.</p>
+                    <div class="modal-meta" id="modal-date">
+                        Creación de autor • Yessy Nails
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <a href="#" class="modal-wa-btn" id="modal-wa-btn" target="_blank" rel="noopener">
+                        💬 Pedir este diseño por WhatsApp
+                    </a>
+                    <a href="servicios.html#cotizador" class="btn btn-secondary btn-sm" style="text-align: center;">
+                        📐 Calcular presupuesto en el Cotizador
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         BANNER CTA
+         ============================================================ -->
+    <section class="cta-banner-section">
+        <div class="container">
+            <div class="cta-banner-content">
+                <h2>¿Tienes un diseño en mente que no ves aquí?</h2>
+                <p>Mándanos una foto de inspiración por WhatsApp. En Yessy Nails personalizamos cada detalle para que tus uñas sean exactamente como las soñaste.</p>
+                <a href="https://wa.me/5215587431290?text=Hola%20Yessica,%20tengo%20una%20foto%20de%20referencia%20para%20un%20set%20de%20uñas%20💅" 
+                   class="btn btn-primary dyn-whatsapp-link" 
+                   target="_blank" 
+                   rel="noopener">
+                    📲 Enviar Mi Foto de Inspiración
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER ELEGANTE
+         ============================================================ -->
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <span class="brand-icon">💅</span>
+                        Yessy <span>Nails</span>
+                    </div>
+                    <p>Diseño, técnica y cuidado profesional para tus manos. Salón exclusivo fundado por Yessica Marlen Calderón Luna en la Ciudad de México.</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Enlaces Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="servicios.html">Servicios y Costos</a></li>
+                        <li><a href="portafolio.html">Portafolio</a></li>
+                        <li><a href="perfil.html">Sobre Yessy</a></li>
+                        <li><a href="ubicacion.html">Ubicación</a></li>
+                        <li><a href="chat.html">Chat en Vivo</a></li>
+                        <li><a href="pedidos.html">Pedidos</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Servicios</h4>
+                    <ul class="footer-links">
+                        <li><a href="servicios.html">Acrílico Esculpido</a></li>
+                        <li><a href="servicios.html">Gelish Tradicional</a></li>
+                        <li><a href="servicios.html">Soft Gel Tips</a></li>
+                        <li><a href="servicios.html">Polygel Dual System</a></li>
+                        <li><a href="servicios.html">Retiro & Mantenimiento</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Contacto</h4>
+                    <ul class="footer-contact">
+                        <li><span>📍</span> <span class="dyn-address">Av. Insurgentes Sur 1234, Col. Del Valle, CDMX</span></li>
+                        <li><span>💬</span> <a href="https://wa.me/5215587431290" class="dyn-whatsapp-link dyn-phone-text">+52 1 55 8743 1290</a></li>
+                        <li><span>🕐</span> <span class="dyn-schedule">Lun-Vie: 10am-7pm | Sáb: 9am-4pm</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Yessy Nails — Todos los derechos reservados. Diseñado para Yessica Marlen Calderón Luna. <a href="admin.html" style="color: inherit; opacity: 0.7; text-decoration: underline; margin-left: 0.5rem;">🔒 Acceso Admin</a></p>
+                <p>Estética & Bioseguridad Profesional</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón Flotante WhatsApp -->
+    <a href="https://wa.me/5215587431290?text=Hola%20Yessy%20Nails,%20tengo%20una%20pregunta%20sobre%20un%20diseño%20💅" 
+       class="whatsapp-float dyn-whatsapp-link" 
+       target="_blank" 
+       rel="noopener" 
+       aria-label="Contactar por WhatsApp">
+        💬
+    </a>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/portafolio.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

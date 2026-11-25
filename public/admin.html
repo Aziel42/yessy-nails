@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel Administrativo de Yessy Nails — Gestión de citas, personalización de banners, servicios y chat para Yessica Marlen Calderón Luna.">
+    <title>Panel de Administración 💅 — Yessy Nails</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+    <!-- ============================================================
+         1. PANTALLA DE INICIO DE SESIÓN (LOGIN)
+         ============================================================ -->
+    <div class="admin-login-wrapper" id="view-login">
+        <div class="admin-login-card">
+            <div class="admin-login-logo">
+                <span>💅</span> Yessy <span>Nails</span>
+            </div>
+            <div class="admin-login-subtitle">
+                Panel de Control • Yessica Marlen Calderón Luna
+            </div>
+
+            <!-- Alerta de Error de Login -->
+            <div id="login-error-alert" style="display: none; padding: 0.85rem; border-radius: var(--radius-md); background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; margin-bottom: 1.5rem; font-size: 0.9rem;"></div>
+
+            <form id="admin-login-form" novalidate>
+                <div class="form-group" style="text-align: left; margin-bottom: 1.25rem;">
+                    <label class="form-label" for="login-email">Correo electrónico</label>
+                    <input type="email" id="login-email" name="email" class="form-control" placeholder="tu-correo@ejemplo.com" value="" required autocomplete="email">
+                </div>
+
+                <div class="form-group" style="text-align: left; margin-bottom: 1.75rem;">
+                    <label class="form-label" for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" name="password" class="form-control" placeholder="••••••••" value="" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1rem;" id="btn-login-submit">
+                    Iniciar Sesión 💅
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px dashed var(--color-border); font-size: 0.82rem; color: var(--color-text-muted);">
+                🔒 Acceso protegido con Supabase Auth (correo y contraseña)
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         2. PANEL PRINCIPAL DASHBOARD (PROTEGIDO)
+         ============================================================ -->
+    <div id="view-dashboard" style="display: none;">
+        
+        <!-- Header del Dashboard -->
+        <header class="admin-header">
+            <div class="container admin-header-flex">
+                <a href="index.html" class="brand-logo" style="font-size: 1.35rem;" target="_blank" title="Ver sitio público">
+                    <span class="brand-icon">💅</span> Yessy <span>Nails</span>
+                    <span style="font-size: 0.72rem; background: var(--color-accent-light); color: var(--color-accent-dark); padding: 0.15rem 0.5rem; border-radius: 4px; font-family: var(--font-body); font-weight: 700; margin-left: 0.5rem;">ADMIN</span>
+                </a>
+
+                <div class="admin-profile-pill">
+                    <div class="admin-avatar">YN</div>
+                    <div>
+                        <strong id="admin-logged-user" style="font-size: 0.92rem; display: block;">Yessica Marlen</strong>
+                        <span style="font-size: 0.75rem; color: #2E7D32; font-weight: 600;">● Sesión Activa</span>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" id="admin-logout-btn" style="margin-left: 1rem;">
+                        Cerrar Sesión 🚪
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="container" style="padding-top: 1.5rem;">
+            
+            <!-- Barra de Pestañas de Navegación del Panel -->
+            <nav class="admin-nav-tabs" role="tablist">
+                <button type="button" class="admin-tab-btn active" data-tab="config">
+                    <span>⚙️</span> Personalizar Sitio y Banner
+                </button>
+                <button type="button" class="admin-tab-btn" data-tab="servicios-portafolio">
+                    <span>💅</span> Servicios y Portafolio
+                </button>
+                <button type="button" class="admin-tab-btn" data-tab="citas">
+                    <span>📅</span> Agenda de Citas
+                </button>
+                <button type="button" class="admin-tab-btn" data-tab="pedidos">
+                    <span>🛍️</span> Pedidos
+                    <span class="admin-tab-badge" id="admin-pedidos-tab-badge" style="display: none;">0</span>
+                </button>
+                <button type="button" class="admin-tab-btn" data-tab="ofertas">
+                    <span>✉️</span> Enviar Oferta
+                </button>
+                <button type="button" class="admin-tab-btn" data-tab="chat">
+                    <span>💬</span> Bandeja de Chat
+                    <span class="admin-tab-badge" id="admin-chat-tab-badge" style="display: none;">0</span>
+                </button>
+            </nav>
+
+            <!-- ========================================================
+                 PESTAÑA 1: PERSONALIZAR SITIO Y BANNER (PUT /api/config)
+                 ======================================================== -->
+            <section class="admin-tab-panel active" id="tab-panel-config">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Personalizar Sitio Web & Hero Banner</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Modifica textos, teléfonos, horarios y banners en tiempo real sin tocar código.</p>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de Respuesta -->
+                    <div id="config-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
+
+                    <!-- Vista previa en vivo del banner (degradado elegante por defecto) -->
+                    <div class="banner-preview-box" style="margin-bottom: 2rem; border-radius: var(--radius-md); overflow: hidden; height: 180px; position: relative; border: 1.5px solid var(--color-border);">
+                        <img src="" id="banner-preview-img" class="banner-preview-img" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" alt="Preview del Banner" onerror="this.classList.add('is-hidden')">
+                        <div style="position: absolute; inset: 0; background: rgba(74,63,63,0.25); display: flex; align-items: center; justify-content: center; color: white; pointer-events: none;">
+                            <span style="background: rgba(74,63,63,0.65); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Vista Previa del Banner</span>
+                        </div>
+                    </div>
+
+                    <form id="admin-config-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_titulo_banner">Título Principal del Banner *</label>
+                                <input type="text" id="cfg_titulo_banner" name="titulo_banner" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_telefono_whatsapp">Teléfono de WhatsApp (con código de país) *</label>
+                                <input type="text" id="cfg_telefono_whatsapp" name="telefono_whatsapp" class="form-control" placeholder="+5215587431290" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cfg_subtitulo_banner">Subtítulo / Eslogan del Salón</label>
+                            <input type="text" id="cfg_subtitulo_banner" name="subtitulo_banner" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cfg_imagen_banner_url">Imagen de Fondo del Banner</label>
+                            <input type="url" id="cfg_imagen_banner_url" name="imagen_banner_url" class="form-control" placeholder="https://... (o sube un archivo abajo)">
+                            <input type="file" id="cfg_banner_file" class="form-control" accept="image/*" style="margin-top: 0.5rem;" onchange="ADMIN_APP.handleImageUpload(event, 'imagen_banner_url', 'banner-preview-img')">
+                            <small style="color: var(--color-text-muted); display: block; margin-top: 0.35rem;">Sube un archivo desde tu equipo o pega una URL externa. Formatos: JPG, PNG, WebP, GIF (máx. 10 MB).</small>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_horario_atencion">Horarios de Atención</label>
+                                <input type="text" id="cfg_horario_atencion" name="horario_atencion" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_anos_experiencia">Años de Experiencia</label>
+                                <input type="number" id="cfg_anos_experiencia" name="anos_experiencia" class="form-control" min="1" max="50">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cfg_direccion_texto">Dirección Física del Estudio</label>
+                            <input type="text" id="cfg_direccion_texto" name="direccion_texto" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cfg_bio_yessica">Biografía / Presentación de Yessica</label>
+                            <textarea id="cfg_bio_yessica" name="bio_yessica" class="form-control" rows="4"></textarea>
+                        </div>
+
+                        <!-- Promoción mensual destacada en el sitio -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_promo_mes_titulo">Título de la Promoción del Mes</label>
+                                <input type="text" id="cfg_promo_mes_titulo" name="promo_mes_titulo" class="form-control" placeholder="Promoción de Diciembre">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_promo_mes_texto">Texto de la Promoción</label>
+                                <input type="text" id="cfg_promo_mes_texto" name="promo_mes_texto" class="form-control" placeholder="Uñas acrílicas desde $250 MXN, de 1 a 3 tonos hasta el número 3.">
+                            </div>
+                        </div>
+
+                        <!-- Coordenadas para el mapa (Leaflet + OpenStreetMap) -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_latitud">Latitud (mapa)</label>
+                                <input type="number" step="0.0000001" id="cfg_latitud" name="latitud" class="form-control" placeholder="19.5855000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_longitud">Longitud (mapa)</label>
+                                <input type="number" step="0.0000001" id="cfg_longitud" name="longitud" class="form-control" placeholder="-99.0195000">
+                            </div>
+                        </div>
+
+                        <!-- Datos de transferencia (dejar en blanco o genéricos por seguridad) -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_banco_transferencia">Banco (Transferencia)</label>
+                                <input type="text" id="cfg_banco_transferencia" name="banco_transferencia" class="form-control" placeholder="Banco de Ejemplo">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="cfg_titular_transferencia">Titular de la Cuenta</label>
+                                <input type="text" id="cfg_titular_transferencia" name="titular_transferencia" class="form-control" placeholder="Nombre de la Titular">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="cfg_clabe_transferencia">CLABE Interbancaria (18 dígitos)</label>
+                            <input type="text" id="cfg_clabe_transferencia" name="clabe_transferencia" class="form-control" maxlength="18" placeholder="000000000000000000">
+                            <small class="form-help">⚠️ Por seguridad no escribas cuentas reales en el código. Edítalas aquí solo cuando lo necesites.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-save-config">
+                            Guardar Cambios del Sitio ✨
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 2: SERVICIOS Y PORTAFOLIO (CRUD)
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-servicios-portafolio">
+                
+                <!-- Sección 1: Gestión de Servicios -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Catálogo de Servicios & Costos</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Agrega, actualiza precios o desactiva servicios del menú.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="ADMIN_APP.openCreateServiceModal()">
+                            + Nuevo Servicio ✨
+                        </button>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Servicio & Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Precio Base</th>
+                                    <th>Duración</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="services-table-body">
+                                <tr><td colspan="6" style="text-align: center;">Cargando servicios...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Gestión de Portafolio -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Galería de Portafolio de Diseños</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Sube nuevos sets de uñas para mostrarlos a tus clientas.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="ADMIN_APP.openCreatePortfolioModal()">
+                            + Nuevo Trabajo 📷
+                        </button>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Título del Set</th>
+                                    <th>Estilo</th>
+                                    <th>Descripción</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolio-table-body">
+                                <tr><td colspan="5" style="text-align: center;">Cargando portafolio...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 3: AGENDA DE CITAS
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-citas">
+                
+                <!-- Estadísticas Rápidas -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <small>Total de Citas Registradas</small>
+                        <div class="stat-val" id="stat-total-citas">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Citas Pendientes de Confirmar</small>
+                        <div class="stat-val" id="stat-pending-citas" style="color: #F57F17;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Citas Confirmadas</small>
+                        <div class="stat-val" id="stat-confirmed-citas" style="color: #2E7D32;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Ingresos Totales Estimados</small>
+                        <div class="stat-val" id="stat-revenue-citas">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Interruptor Auto-cancelación -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h4 style="margin: 0 0 0.25rem;">⚡ Auto-cancelación de Citas Sin Anticipo</h4>
+                            <p style="margin: 0; font-size: 0.88rem; color: var(--color-text-muted);">
+                                Cuando está <strong>ON</strong>: las citas pendientes sin folio de anticipo que superen el límite de horas se cancelan automáticamente y se notifica a la clienta por correo.<br>
+                                Cuando está <strong>OFF</strong>: permanecen pendientes para que las gestiones tú manualmente.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                <span style="font-size: 0.88rem; color: var(--color-text-muted);">Límite de horas:</span>
+                                <input type="number" id="cfg-horas-limite" min="1" max="168" value="24"
+                                       style="width: 70px; padding: 0.35rem 0.5rem; border: 1.5px solid var(--color-border); border-radius: 8px; font-size: 0.9rem;"
+                                       onchange="ADMIN_APP.saveAutoCancelConfig()">
+                            </div>
+                            <!-- Toggle ON/OFF -->
+                            <label class="auto-cancel-toggle" title="Activar/Desactivar auto-cancelación">
+                                <input type="checkbox" id="toggle-auto-cancel" onchange="ADMIN_APP.saveAutoCancelConfig()">
+                                <span class="toggle-track">
+                                    <span class="toggle-thumb"></span>
+                                </span>
+                                <span id="toggle-auto-cancel-label" style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-muted);">OFF</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="auto-cancel-alert" style="display:none; margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem;"></div>
+                    <div style="margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.verifyPendingAppointments()">
+                            🔍 Verificar Citas Pendientes Ahora
+                        </button>
+                        <div id="verify-result" style="display:none; margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 1rem; border-radius: var(--radius-md);"></div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Control de Citas Registradas</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Gestiona estados de cita y pago con actualización instantánea.</p>
+                        </div>
+                        <!-- Filtros -->
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <input type="text" id="filter-citas-search" class="form-control" placeholder="Buscar por cliente o teléfono..." style="width: 240px; padding: 0.45rem 0.85rem;" oninput="ADMIN_APP.filterAppointments()">
+                            <select id="filter-citas-status" class="form-control" style="width: 170px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterAppointments()">
+                                <option value="todas">Todas las Citas</option>
+                                <option value="pendiente">⏳ Pendientes</option>
+                                <option value="confirmada">✅ Confirmadas</option>
+                                <option value="completada">🎉 Completadas</option>
+                                <option value="cancelada">❌ Canceladas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Clienta & WhatsApp</th>
+                                    <th>Servicio & Notas</th>
+                                    <th>Fecha & Hora</th>
+                                    <th>Total Est.</th>
+                                    <th>Estado Cita</th>
+                                    <th>Estado Pago</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointments-table-body">
+                                <tr><td colspan="8" style="text-align: center;">Cargando agenda...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 4: PEDIDOS
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-pedidos">
+
+                <!-- Estadísticas rápidas de pedidos -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <small>Total de Pedidos</small>
+                        <div class="stat-val" id="stat-total-pedidos">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Pendientes</small>
+                        <div class="stat-val" id="stat-pending-pedidos" style="color: #F57F17;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Confirmados</small>
+                        <div class="stat-val" id="stat-confirmed-pedidos" style="color: #2E7D32;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Ingresos Totales Estimados</small>
+                        <div class="stat-val" id="stat-revenue-pedidos">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Control de Pedidos de Materiales</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Gestiona los pedidos de la tienda. Cambia el estado desde el selector.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <select id="filter-pedidos-status" class="form-control" style="width: 180px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterPedidos()">
+                                <option value="todos">Todos los Pedidos</option>
+                                <option value="pendiente">⏳ Pendientes</option>
+                                <option value="confirmado">✅ Confirmados</option>
+                                <option value="entregado">📦 Entregados</option>
+                                <option value="cancelado">❌ Cancelados</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.loadPedidos()">🔄 Actualizar</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Clienta & Contacto</th>
+                                    <th>Productos</th>
+                                    <th>Entrega</th>
+                                    <th>Total</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pedidos-table-body">
+                                <tr><td colspan="8" style="text-align: center;">Cargando pedidos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 5: ENVIAR OFERTA POR CORREO
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-ofertas">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>✉️ Enviar Oferta por Correo</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Redacta una promoción y envíala a todas las clientas con <strong>acepta_promociones = true</strong>.</p>
+                        </div>
+                    </div>
+
+                    <div id="ofertas-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
+
+                    <!-- Resumen de destinatarias -->
+                    <div style="background: var(--color-accent-light); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                        <span>📋 Destinatarias registradas con suscripción activa: </span>
+                        <strong id="ofertas-subscriber-count" style="color: var(--color-accent-dark);">calculando…</strong>
+                        <span style="color: var(--color-text-muted); font-size: 0.82rem; display: block; margin-top: 0.3rem;">
+                            Solo se envía a clientas que marcaron "acepta promociones" al registrarse. Respeta la privacidad de tu base de datos.
+                        </span>
+                    </div>
+
+                    <form id="offer-email-form" novalidate>
+
+                        <div class="form-group">
+                            <label class="form-label" for="offer-asunto">Asunto del Correo *</label>
+                            <input type="text" id="offer-asunto" class="form-control"
+                                   placeholder="Ej. ✨ Promoción de Enero — Yessy Nails" required>
+                            <small style="color: var(--color-text-muted); font-size: 0.82rem;">
+                                Si lo dejas vacío se usará el asunto por defecto: "✨ Promoción del mes — Yessy Nails".
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="offer-mensaje">Mensaje de la Promoción *</label>
+                            <textarea id="offer-mensaje" class="form-control" rows="7" required
+                                      placeholder="Ej. ¡Hola! 💕 Este mes tenemos una oferta increíble: Uñas acrílicas con diseño desde $250 MXN.&#10;&#10;Agenda antes del 31 de enero y recibe un regalo sorpresa. ¡Te esperamos! ✨"></textarea>
+                            <small style="color: var(--color-text-muted); font-size: 0.82rem;">
+                                Puedes usar saltos de línea. El nombre de cada clienta se agrega automáticamente al inicio del correo.
+                            </small>
+                        </div>
+
+                        <!-- Vista previa del asunto -->
+                        <div style="background: #F9F5F3; border: 1.5px solid var(--color-border); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.88rem;">
+                            <strong style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">Vista previa del encabezado</strong>
+                            <div style="margin-top: 0.5rem;">
+                                <span style="font-weight: 700;">Asunto:</span> <span id="offer-preview-subject">—</span>
+                            </div>
+                            <div style="margin-top: 0.3rem; white-space: pre-line; color: var(--color-text-muted);">
+                                <span style="font-weight: 700;">Mensaje:</span> <span id="offer-preview-body">—</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                            <button type="submit" class="btn btn-primary" id="btn-send-offer">
+                                ✉️ Enviar Oferta a Todas las Clientas
+                            </button>
+                            <span style="font-size: 0.82rem; color: var(--color-text-muted);">
+                                ⚠️ Esta acción no se puede deshacer. Revisa el mensaje antes de enviar.
+                            </span>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 6: BANDEJA DE CHAT
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-chat">
+                <div class="admin-chat-grid">
+                    
+                    <!-- Columna Izquierda: Lista de Conversaciones Activas -->
+                    <div class="admin-rooms-col">
+                        <div class="admin-rooms-header">
+                            <h4 style="font-size: 1.1rem; margin: 0;">Conversaciones Activas</h4>
+                            <small style="color: var(--color-text-muted);">Mensajes de clientas en tiempo real</small>
+                        </div>
+                        <div class="admin-rooms-list" id="admin-chat-rooms-list">
+                            <div style="padding: 2rem; text-align: center; color: var(--color-text-muted);">Cargando salas de chat...</div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Ventana Activa de Chat -->
+                    <div class="admin-chat-stream">
+                        <!-- Vista Vacía (Sin Sala Seleccionada) -->
+                        <div id="admin-chat-empty-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 2rem; color: var(--color-text-muted);">
+                            <span style="font-size: 3rem; margin-bottom: 0.5rem;">💬</span>
+                            <h4>Selecciona una conversación</h4>
+                            <p style="font-size: 0.9rem;">Elige una clienta de la lista izquierda para responderle en vivo.</p>
+                        </div>
+
+                        <!-- Vista Activa de Chat -->
+                        <div id="admin-chat-active-panel" style="display: none; flex-direction: column; height: 100%;">
+                            <!-- Cabecera de la Sala -->
+                            <div style="padding: 1rem 1.5rem; background: #FAF7F5; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 id="admin-chat-client-title" style="margin: 0; font-size: 1.1rem;">Clienta</h4>
+                                    <span style="font-size: 0.78rem; color: #2E7D32;">● Sala activa</span>
+                                </div>
+
+                                <!-- Botones de Respuesta Rápida -->
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.insertQuickResponse('¡Hola! Claro que sí, con gusto te confirmo la cita en Yessy Nails 💅')">
+                                        Confirmar Cita
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.insertQuickResponse('Para apartar tu fecha requerimos un anticipo del 50% vía transferencia SPEI ✨')">
+                                        Anticipo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Mensajes -->
+                            <div class="admin-chat-messages-box" id="admin-chat-messages-container"></div>
+
+                            <!-- Formulario de Respuesta -->
+                            <form id="admin-chat-send-form" class="chat-footer-form">
+                                <input type="text" id="admin-chat-input" class="chat-input-control" placeholder="Escribe tu respuesta como Yessica..." autocomplete="off" required>
+                                <button type="submit" class="chat-send-btn" aria-label="Enviar respuesta">
+                                    ➤
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODALES: CREAR/EDITAR SERVICIOS Y PORTAFOLIO
+         ============================================================ -->
+    <!-- Modal Servicio -->
+    <div class="admin-modal-overlay" id="service-modal">
+        <div class="admin-modal-dialog">
+            <h3 id="service-modal-title" style="margin-bottom: 1.5rem;">Servicio</h3>
+            <form id="service-modal-form" onsubmit="ADMIN_APP.handleSaveService(event)">
+                <input type="hidden" name="service_id">
+                
+                <div class="form-group">
+                    <label class="form-label">Nombre del Servicio *</label>
+                    <input type="text" name="nombre" class="form-control" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Categoría *</label>
+                        <select name="categoria" class="form-control" required>
+                            <option value="Acrílico">Acrílico</option>
+                            <option value="Gelish">Gelish</option>
+                            <option value="Soft Gel">Soft Gel</option>
+                            <option value="Polygel">Polygel</option>
+                            <option value="Pedicure/Spa">Pedicure/Spa</option>
+                            <option value="Cejas">Cejas</option>
+                            <option value="Retiro/Mantenimiento">Retiro/Mantenimiento</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Precio Base (MXN) *</label>
+                        <input type="number" step="0.50" name="precio_base" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Duración Estimada (Minutos) *</label>
+                        <input type="number" name="duracion_minutos" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Imagen del Servicio (Opcional)</label>
+                        <input type="url" name="imagen_url" class="form-control" placeholder="https://... (o sube un archivo abajo)">
+                        <input type="file" class="form-control" accept="image/*" style="margin-top: 0.5rem;" onchange="ADMIN_APP.handleImageUpload(event, 'imagen_url', 'service-img-preview')">
+                        <img id="service-img-preview" src="" alt="Vista previa" style="display: none; margin-top: 0.5rem; width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="ADMIN_APP.closeServiceModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Servicio ✨</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Portafolio -->
+    <div class="admin-modal-overlay" id="portfolio-modal">
+        <div class="admin-modal-dialog">
+            <h3 style="margin-bottom: 1.5rem;">Subir Nuevo Trabajo al Portafolio</h3>
+            <form id="portfolio-modal-form" onsubmit="ADMIN_APP.handleSavePortfolio(event)">
+                <div class="form-group">
+                    <label class="form-label">Título del Diseño *</label>
+                    <input type="text" name="titulo" class="form-control" placeholder="Ej. Coffin Mármol y Oro" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Estilo / Colección *</label>
+                        <select name="estilo" class="form-control" required>
+                            <option value="Minimalista">Minimalista</option>
+                            <option value="3D">3D & Relieve</option>
+                            <option value="Francés">Francés</option>
+                            <option value="Temporada">Temporada</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fotografía del Trabajo *</label>
+                        <input type="url" name="imagen_url" class="form-control" placeholder="https://... (o sube un archivo abajo)" required>
+                        <input type="file" class="form-control" accept="image/*" style="margin-top: 0.5rem;" onchange="ADMIN_APP.handleImageUpload(event, 'imagen_url', 'portfolio-img-preview')">
+                        <img id="portfolio-img-preview" src="" alt="Vista previa" style="display: none; margin-top: 0.5rem; width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descripción del Trabajo</label>
+                    <textarea name="descripcion" class="form-control" rows="3" placeholder="Detalles de la técnica, materiales y acabados..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="ADMIN_APP.closePortfolioModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Subir al Portafolio 📷</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Catálogo completo de servicios y costos de Yessy Nails — Acrílico esculpido, gelish, soft gel, polygel y cotizador interactivo en tiempo real.">
+    <title>Servicios y Costos 💅 — Yessy Nails</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Servicios y Costos — Yessy Nails">
+    <meta property="og:description" content="Catálogo completo de servicios: acrílico esculpido, pedicure spa, cejas y cotizador interactivo en tiempo real. Precios claros desde $150 MXN.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yessyNails.com/servicios.html">
+    <meta property="og:image" content="https://yessyNails.com/img/yessica.jpg">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Yessy Nails">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ============================================================
+         HEADER & NAVEGACIÓN RESPONSIVA
+         ============================================================ -->
+    <header class="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="brand-logo" aria-label="Inicio Yessy Nails">
+                <span class="brand-icon">💅</span>
+                Yessy <span>Nails</span>
+            </a>
+
+            <!-- Navegación -->
+            <nav class="main-nav" aria-label="Navegación principal">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Inicio</a></li>
+                    <li><a href="servicios.html" class="nav-link active">Servicios y Costos</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
+                    <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
+                    <li><a href="pedidos.html" class="nav-link">Pedidos</a></li>
+                </ul>
+
+                <div class="header-cta">
+                    <a href="#cotizador" class="btn btn-primary btn-sm">Cotizar en Vivo ✨</a>
+                </div>
+            </nav>
+
+            <!-- Botón Hamburguesa Móvil -->
+            <button class="menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+
+    <!-- ============================================================
+         HERO DE SERVICIOS
+         ============================================================ -->
+    <section class="portfolio-hero">
+        <div class="container">
+            <span class="section-tag">Menú Profesional</span>
+            <h1>Servicios y Costos Transparentes</h1>
+            <p>Descubre nuestra gama de técnicas de vanguardia. Precios claros, productos de alta gama y durabilidad garantizada.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="#cotizador" class="btn btn-primary">Ir al Cotizador Interactivo ✨</a>
+                <a href="#catalogo" class="btn btn-secondary">Ver Catálogo Completo</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         CATÁLOGO COMPLETO ORGANIZADO POR CATEGORÍAS
+         ============================================================ -->
+    <section class="services-section" id="catalogo">
+        <div class="container">
+            <!-- Pestañas de Filtro Rápido -->
+            <nav class="category-nav" aria-label="Filtro de categorías de servicios">
+                <button type="button" class="category-tab active" data-category="todos">Todos los Servicios</button>
+                <button type="button" class="category-tab" data-category="Acrílico">Acrílico</button>
+                <button type="button" class="category-tab" data-category="Pedicure/Spa">Pedicure & Spa</button>
+                <button type="button" class="category-tab" data-category="Cejas">Cejas</button>
+            </nav>
+
+            <!-- Contenedor dinámico renderizado por servicios.js -->
+            <div id="services-catalog-container">
+                <div style="text-align: center; padding: 3rem 0; color: var(--color-text-muted);">
+                    <p>Cargando menú de servicios profesionales...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         COTIZADOR RÁPIDO DE DISEÑO (INTERACTIVO EN TIEMPO REAL)
+         ============================================================ -->
+    <section class="cotizador-section" id="cotizador">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Calculadora en Tiempo Real</span>
+                <h2>Cotizador Rápido de Diseño</h2>
+                <p>Personaliza tu set ideal: elige tu técnica base, el largo deseado y los acabados artísticos. Obtén tu presupuesto exacto al instante.</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="cotizador-wrapper">
+                <!-- Columna Izquierda: Opciones interactivas -->
+                <form id="cotizador-form" class="cotizador-options" onsubmit="return false;">
+                    
+                    <!-- 1. Tipo de Aplicación Base -->
+                    <div>
+                        <h4 class="cotizador-block-title">
+                            <span>1️⃣</span> Selecciona tu Técnica Base
+                        </h4>
+                        <div class="base-service-grid" id="base-services-options">
+                            <!-- Opciones por defecto (actualizadas dinámicamente si hay API) -->
+                            <label class="service-radio-label" data-id="1" data-name="Uñas Acrílicas (Promo del Mes)" data-price="250.00">
+                                <input type="radio" name="base_service" value="1" checked>
+                                <div class="service-radio-card">
+                                    <strong>Uñas Acrílicas (Promo del Mes)</strong>
+                                    <span>Acrílico esculpido • 1 a 3 tonos hasta el #3</span>
+                                    <span class="radio-price">Desde $250.00 MXN</span>
+                                </div>
+                            </label>
+
+                            <label class="service-radio-label" data-id="2" data-name="Pedispa Completo" data-price="320.00">
+                                <input type="radio" name="base_service" value="2">
+                                <div class="service-radio-card">
+                                    <strong>Pedispa Completo</strong>
+                                    <span>Exfoliación, masaje y gel semipermanente</span>
+                                    <span class="radio-price">Desde $320.00 MXN</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 2. Largo de Uña (#1 a #5) -->
+                    <div>
+                        <h4 class="cotizador-block-title">
+                            <span>2️⃣</span> Largo de Uña Deseado
+                        </h4>
+                        <div class="nail-length-selector">
+                            <label class="length-chip-label" data-name="Natural / Corto (#1)" data-cost="0.00">
+                                <input type="radio" name="nail_length" value="1" checked>
+                                <div class="length-chip">
+                                    <span class="chip-number">#1</span>
+                                    <span class="chip-name">Corto</span>
+                                    <span class="chip-cost">Incluido</span>
+                                </div>
+                            </label>
+
+                            <label class="length-chip-label" data-name="Mediano (#2)" data-cost="50.00">
+                                <input type="radio" name="nail_length" value="2">
+                                <div class="length-chip">
+                                    <span class="chip-number">#2</span>
+                                    <span class="chip-name">Mediano</span>
+                                    <span class="chip-cost">+$50</span>
+                                </div>
+                            </label>
+
+                            <label class="length-chip-label" data-name="Largo (#3)" data-cost="100.00">
+                                <input type="radio" name="nail_length" value="3">
+                                <div class="length-chip">
+                                    <span class="chip-number">#3</span>
+                                    <span class="chip-name">Largo</span>
+                                    <span class="chip-cost">+$100</span>
+                                </div>
+                            </label>
+
+                            <label class="length-chip-label" data-name="Extra Largo (#4)" data-cost="150.00">
+                                <input type="radio" name="nail_length" value="4">
+                                <div class="length-chip">
+                                    <span class="chip-number">#4</span>
+                                    <span class="chip-name">XL</span>
+                                    <span class="chip-cost">+$150</span>
+                                </div>
+                            </label>
+
+                            <label class="length-chip-label" data-name="XXL Escultural (#5)" data-cost="200.00">
+                                <input type="radio" name="nail_length" value="5">
+                                <div class="length-chip">
+                                    <span class="chip-number">#5</span>
+                                    <span class="chip-name">XXL</span>
+                                    <span class="chip-cost">+$200</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 3. Retiro de Material Previo -->
+                    <div>
+                        <h4 class="cotizador-block-title">
+                            <span>3️⃣</span> ¿Tienes material anterior para retirar?
+                        </h4>
+                        <label class="extra-check-label">
+                            <input type="checkbox" name="extra_retiro" id="check-retiro">
+                            <div class="extra-check-card">
+                                <div class="extra-check-info">
+                                    <strong>Retiro Seguro de Set Previo</strong>
+                                    <span>Remojo cuidadoso y pulido sin desgaste ungueal</span>
+                                </div>
+                                <span class="extra-cost">+$150.00 MXN</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- 4. Extras y Diseños Artísticos -->
+                    <div>
+                        <h4 class="cotizador-block-title">
+                            <span>4️⃣</span> Agrega Acabados Artísticos & Extras
+                        </h4>
+                        <div class="extras-grid">
+                            <label class="extra-check-label">
+                                <input type="checkbox" class="extra-design-check" value="cristales" data-name="Cristales / Pedrería Swarovski" data-cost="80.00">
+                                <div class="extra-check-card">
+                                    <div class="extra-check-info">
+                                        <strong>Cristales Swarovski</strong>
+                                        <span>Brillo y destello premium</span>
+                                    </div>
+                                    <span class="extra-cost">+$80</span>
+                                </div>
+                            </label>
+
+                            <label class="extra-check-label">
+                                <input type="checkbox" class="extra-design-check" value="chrome" data-name="Efecto Espejo / Chrome Aurora" data-cost="100.00">
+                                <div class="extra-check-card">
+                                    <div class="extra-check-info">
+                                        <strong>Efecto Chrome / Espejo</strong>
+                                        <span>Pigmento metálico pulido</span>
+                                    </div>
+                                    <span class="extra-cost">+$100</span>
+                                </div>
+                            </label>
+
+                            <label class="extra-check-label">
+                                <input type="checkbox" class="extra-design-check" value="3d" data-name="Diseño 3D en Relieve" data-cost="120.00">
+                                <div class="extra-check-card">
+                                    <div class="extra-check-info">
+                                        <strong>Arte en Relieve 3D</strong>
+                                        <span>Flores o figuras esculpidas</span>
+                                    </div>
+                                    <span class="extra-cost">+$120</span>
+                                </div>
+                            </label>
+
+                            <label class="extra-check-label">
+                                <input type="checkbox" class="extra-design-check" value="encapsulado" data-name="Encapsulado de Foil / Flores" data-cost="90.00">
+                                <div class="extra-check-card">
+                                    <div class="extra-check-info">
+                                        <strong>Encapsulado Cristal</strong>
+                                        <span>Foil dorado y elementos secos</span>
+                                    </div>
+                                    <span class="extra-cost">+$90</span>
+                                </div>
+                            </label>
+
+                            <label class="extra-check-label">
+                                <input type="checkbox" class="extra-design-check" value="babyboomer" data-name="Baby Boomer / Degradado" data-cost="70.00">
+                                <div class="extra-check-card">
+                                    <div class="extra-check-info">
+                                        <strong>Baby Boomer</strong>
+                                        <span>Degradado suave blanco a nude</span>
+                                    </div>
+                                    <span class="extra-cost">+$70</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- Columna Derecha: Tarjeta de Desglose en Tiempo Real -->
+                <aside class="cotizador-summary">
+                    <div class="summary-header">
+                        <span class="section-tag" style="margin-bottom: 0.4rem;">Presupuesto Estimado</span>
+                        <h4>Tu Set Personalizado</h4>
+                        <p>Cálculo transparente en moneda nacional (MXN).</p>
+                    </div>
+
+                    <div class="summary-items-list">
+                        <!-- Servicio base -->
+                        <div class="summary-row">
+                            <span id="sum-service-name">Uñas Acrílicas (Promo del Mes)</span>
+                            <span id="sum-service-cost">$250.00</span>
+                        </div>
+
+                        <!-- Largo -->
+                        <div class="summary-row">
+                            <span id="sum-length-name">Largo Natural (#1)</span>
+                            <span id="sum-length-cost">$0.00</span>
+                        </div>
+
+                        <!-- Retiro (oculto por defecto) -->
+                        <div class="summary-row" id="sum-removal-row" style="display: none;">
+                            <span>• Retiro de Set Previo</span>
+                            <span id="sum-removal-cost">+$150.00</span>
+                        </div>
+
+                        <!-- Extras seleccionados -->
+                        <div id="sum-extras-list"></div>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <!-- Total Estimado -->
+                    <div class="summary-total-row">
+                        <div class="total-label">
+                            <strong>Total Estimado:</strong>
+                            <small>Sujeto a diseño final en mesa</small>
+                        </div>
+                        <div class="total-amount" id="sum-total-amount">$250.00</div>
+                    </div>
+
+                    <!-- Botón CTA a agendar.html -->
+                    <button type="button" class="btn btn-primary btn-agendar-presupuesto" id="btn-agendar-presupuesto">
+                        Agendar con este presupuesto 💅
+                    </button>
+                    
+                    <p style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--color-text-light);">
+                        🔒 Tus selecciones se guardarán para tu cita en <a href="agendar.html" style="color: var(--color-accent-dark); text-decoration: underline;">agendar.html</a>
+                    </p>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER ELEGANTE
+         ============================================================ -->
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <span class="brand-icon">💅</span>
+                        Yessy <span>Nails</span>
+                    </div>
+                    <p>Diseño, técnica y cuidado profesional para tus manos. Salón exclusivo fundado por Yessica Marlen Calderón Luna en Ecatepec de Morelos, Estado de México.</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Enlaces Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="servicios.html">Servicios y Costos</a></li>
+                        <li><a href="portafolio.html">Portafolio</a></li>
+                        <li><a href="perfil.html">Sobre Yessy</a></li>
+                        <li><a href="ubicacion.html">Ubicación</a></li>
+                        <li><a href="chat.html">Chat en Vivo</a></li>
+                        <li><a href="pedidos.html">Pedidos</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Servicios</h4>
+                    <ul class="footer-links">
+                        <li><a href="#catalogo">Uñas Acrílicas (Promo del Mes)</a></li>
+                        <li><a href="#catalogo">Pedispa Completo</a></li>
+                        <li><a href="#catalogo">Planchado y Perfilado de Ceja</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Contacto</h4>
+                    <ul class="footer-contact">
+                        <li><span>📍</span> <span class="dyn-address">Las Américas, Mz 42 Lt 5, Ecatepec de Morelos, Edomex</span></li>
+                        <li><span>💬</span> <a href="https://wa.me/5215587431290" class="dyn-whatsapp-link dyn-phone-text">+52 1 55 8743 1290</a></li>
+                        <li><span>🕐</span> <span class="dyn-schedule">Lun-Vie: 10am-7pm | Sáb: 9am-4pm</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Yessy Nails — Todos los derechos reservados. Diseñado para Yessica Marlen Calderón Luna. <a href="admin.html" style="color: inherit; opacity: 0.7; text-decoration: underline; margin-left: 0.5rem;">🔒 Acceso Admin</a></p>
+                <p>Estética & Bioseguridad Profesional</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón Flotante WhatsApp -->
+    <a href="https://wa.me/5215587431290?text=Hola%20Yessy%20Nails,%20tengo%20dudas%20sobre%20un%20servicio%20💅" 
+       class="whatsapp-float dyn-whatsapp-link" 
+       target="_blank" 
+       rel="noopener" 
+       aria-label="Contactar por WhatsApp">
+        💬
+    </a>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/servicios.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ubicación y Políticas de Yessy Nails — Dirección, mapa interactivo, referencias de llegada y políticas de puntualidad, cancelación y cuidados ungueales.">
+    <title>Ubicación y Políticas 💅 — Yessy Nails</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Ubicación y Políticas — Yessy Nails">
+    <meta property="og:description" content="Encuéntranos en Las Américas, Ecatepec de Morelos. Mapa interactivo, horarios, referencias de llegada y políticas del salón.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yessyNails.com/ubicacion.html">
+    <meta property="og:image" content="https://yessyNails.com/img/yessica.jpg">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Yessy Nails">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Leaflet.js + OpenStreetMap (mapas interactivos gratuitos) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+    <!-- ============================================================
+         HEADER & NAVEGACIÓN RESPONSIVA
+         ============================================================ -->
+    <header class="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="brand-logo" aria-label="Inicio Yessy Nails">
+                <span class="brand-icon">💅</span>
+                Yessy <span>Nails</span>
+            </a>
+
+            <!-- Navegación -->
+            <nav class="main-nav" aria-label="Navegación principal">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Inicio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
+                    <li><a href="ubicacion.html" class="nav-link active">Ubicación</a></li>
+                    <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
+                    <li><a href="pedidos.html" class="nav-link">Pedidos</a></li>
+                </ul>
+
+                <div class="header-cta">
+                    <a href="agendar.html" class="btn btn-primary btn-sm">Agendar Cita ✨</a>
+                </div>
+            </nav>
+
+            <!-- Botón Hamburguesa Móvil -->
+            <button class="menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ============================================================
+         HERO DE UBICACIÓN
+         ============================================================ -->
+    <section class="location-page-hero">
+        <div class="container">
+            <span class="section-tag">Encuéntranos Fácilmente</span>
+            <h1>Ubicación & Visita al Estudio</h1>
+            <p>Un espacio exclusivo, privado y climatizado pensado en tu confort, descanso y en la belleza de tus manos.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         MAPA INTERACTIVO & REFERENCIAS PARA LLEGAR
+         ============================================================ -->
+    <main class="container" style="padding-top: 2rem;">
+        <div class="location-content-grid">
+            
+            <!-- Columna Izquierda: Mapa Interactivo -->
+            <div>
+                <div class="location-search-bar">
+                    <input type="text" id="dyn-map-search" class="form-control" placeholder="Busca una dirección o punto de referencia…" aria-label="Buscar dirección en el mapa">
+                    <button type="button" id="dyn-map-search-btn" class="btn btn-secondary btn-sm">🔎 Buscar</button>
+                </div>
+                <div class="location-map-wrap" style="height: 480px; box-shadow: var(--shadow-lg);">
+                    <div id="dyn-map" class="leaflet-map" aria-label="Mapa de ubicación de Yessy Nails"></div>
+                </div>
+                <div style="margin-top: 1.25rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="https://www.openstreetmap.org/?mlat=19.5855&amp;mlon=-99.0195#map=16/19.5855/-99.0195"
+                       target="_blank" 
+                       rel="noopener" 
+                       class="btn btn-secondary btn-sm">
+                        📍 Abrir en OpenStreetMap
+                    </a>
+                    <a href="https://wa.me/5215587431290?text=Hola%20Yessica,%20voy%20en%20camino%20a%20mi%20cita%20💅" 
+                       target="_blank" 
+                       rel="noopener" 
+                       class="btn btn-secondary btn-sm dyn-whatsapp-link">
+                        💬 Avisar que voy en camino
+                    </a>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Dirección Escrita y Guía de Llegada -->
+            <div class="location-card-box">
+                <span class="section-tag">Dirección del Salón</span>
+                <h3 style="font-size: 1.65rem; margin-bottom: 0.5rem;" class="dyn-address">
+                    Las Américas, Mz 42 Lt 5
+                </h3>
+                <p style="color: var(--color-accent-dark); font-weight: 600; margin-bottom: 1.5rem;">
+                    Av. Ignacio López Rayón (entre Simón Bolívar y límite con Jardines de Morelos), Ecatepec de Morelos, Estado de México
+                </p>
+
+                <h4 style="font-size: 1.15rem; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+                    🗺️ Referencias para Llegar Fácil
+                </h4>
+
+                <div class="arrival-guide-list">
+                    <!-- Transporte público -->
+                    <div class="arrival-item">
+                        <div class="arrival-icon">🚌</div>
+                        <div class="arrival-text">
+                            <h5>Transporte Público</h5>
+                            <p>El salón se encuentra sobre <strong>Av. Ignacio López Rayón</strong>, en la colonia Las Américas (Mz 42 Lt 5). Apóyate en el mapa interactivo para trazar tu ruta desde tu punto de partida.</p>
+                        </div>
+                    </div>
+
+                    <!-- Auto / Estacionamiento -->
+                    <div class="arrival-item">
+                        <div class="arrival-icon">🚗</div>
+                        <div class="arrival-text">
+                            <h5>En Automóvil</h5>
+                            <p>Acceso por Av. Ignacio López Rayón, entre <strong>Simón Bolívar</strong> y el <strong>límite con Jardines de Morelos</strong>. Al llegar, la guía del mapa te ubica en la manzana 42, lote 5.</p>
+                        </div>
+                    </div>
+
+                    <!-- Fachada y Acceso -->
+                    <div class="arrival-item">
+                        <div class="arrival-icon">🏠</div>
+                        <div class="arrival-text">
+                            <h5>Acceso al Estudio</h5>
+                            <p>Al llegar a la dirección, <strong>avísanos por WhatsApp</strong> con el botón "Avisar que voy en camino" para darte indicaciones exactas de entrada.</p>
+                        </div>
+                    </div>
+
+                    <!-- Horario -->
+                    <div class="arrival-item">
+                        <div class="arrival-icon">🕐</div>
+                        <div class="arrival-text">
+                            <h5>Horarios de Atención</h5>
+                            <p class="dyn-schedule">
+                                Lunes a Viernes: 10:00 AM – 7:00 PM<br>
+                                Sábado: 9:00 AM – 4:00 PM<br>
+                                <span style="color: var(--color-primary-dark); font-weight: 600;">Domingo: Cerrado</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <a href="agendar.html" class="btn btn-primary" style="width: 100%;">
+                        Reservar Mi Cita Ahora 💅
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ============================================================
+         BLOQUE DE POLÍTICAS CLARAS DEL ESTUDIO
+         ============================================================ -->
+    <section class="policies-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Convivencia y Calidad</span>
+                <h2>Políticas del Estudio</h2>
+                <p>Para brindarte el mejor servicio y respetar el tiempo de cada clienta, te pedimos tomar en cuenta las siguientes normas:</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="policies-grid">
+                
+                <!-- Política 1: Tolerancia de Puntualidad -->
+                <article class="policy-card">
+                    <div class="policy-icon-wrap">⏱️</div>
+                    <h4>Tolerancia de 15 Minutos</h4>
+                    <p>Cuidamos minuciosamente el tiempo de cada cita para que nunca tengas que esperar:</p>
+                    <ul>
+                        <li>Contamos con una tolerancia máxima estricta de <strong>15 minutos</strong>.</li>
+                        <li>Si llegas entre 10 y 15 minutos tarde, el diseño podría simplificarse para no afectar a la clienta siguiente.</li>
+                        <li>Pasados los 15 minutos, la cita se considerará cancelada y deberá ser reprogramada.</li>
+                    </ul>
+                </article>
+
+                <!-- Política 2: Cancelaciones y Reagendado -->
+                <article class="policy-card">
+                    <div class="policy-icon-wrap">📅</div>
+                    <h4>Cancelación & Reagendado</h4>
+                    <p>Entendemos que pueden surgir imprevistos. Te pedimos notificarnos oportunamente:</p>
+                    <ul>
+                        <li>Para cambios de fecha u hora, avísanos con al menos <strong>24 horas de anticipación</strong>.</li>
+                        <li>En citas con anticipo, tu pago se conserva intacto para tu nueva fecha (máximo 1 reprogramación).</li>
+                        <li>Cancelaciones con menos de 24 horas o inasistencias sin aviso causan la pérdida del anticipo.</li>
+                    </ul>
+                </article>
+
+                <!-- Política 3: Cuidados Previos a tu Cita -->
+                <article class="policy-card">
+                    <div class="policy-icon-wrap">💅</div>
+                    <h4>Cuidados Previos a tu Cita</h4>
+                    <p>Recomendaciones esenciales para una adherencia perfecta y salud ungueal:</p>
+                    <ul>
+                        <li>Llega con tus manos limpias y libres de cremas o aceites pesados al menos 1 hora antes.</li>
+                        <li><strong>No cortes ni tires de tus cutículas</strong> días antes; nosotras realizamos la manicura combinada segura.</li>
+                        <li>Si traes set previo de otro salón, avísanos para asignar el tiempo necesario de retiro seguro.</li>
+                        <li>Trae fotos de referencia si tienes un diseño artístico específico en mente.</li>
+                    </ul>
+                </article>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         BANNER CTA
+         ============================================================ -->
+    <section class="cta-banner-section">
+        <div class="container">
+            <div class="cta-banner-content">
+                <h2>¿Todo listo para tu transformación?</h2>
+                <p>Agenda tu espacio con anticipación y disfruta de una experiencia de arte en uñas diseñada para ti.</p>
+                <a href="agendar.html" class="btn btn-primary">
+                    ✨ Agendar Mi Cita en Línea
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         FOOTER ELEGANTE
+         ============================================================ -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <span class="brand-icon">💅</span>
+                        Yessy <span>Nails</span>
+                    </div>
+                    <p>Diseño, técnica y cuidado profesional para tus manos. Salón exclusivo fundado por Yessica Marlen Calderón Luna en Ecatepec de Morelos, Estado de México.</p>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Enlaces Rápidos</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="servicios.html">Servicios y Costos</a></li>
+                        <li><a href="portafolio.html">Portafolio</a></li>
+                        <li><a href="perfil.html">Sobre Yessy</a></li>
+                        <li><a href="ubicacion.html">Ubicación</a></li>
+                        <li><a href="chat.html">Chat en Vivo</a></li>
+                        <li><a href="pedidos.html">Pedidos</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Servicios</h4>
+                    <ul class="footer-links">
+                        <li><a href="servicios.html">Uñas Acrílicas (Promo del Mes)</a></li>
+                        <li><a href="servicios.html">Pedispa Completo</a></li>
+                        <li><a href="servicios.html">Planchado y Perfilado de Ceja</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h4 class="footer-title">Contacto</h4>
+                    <ul class="footer-contact">
+                        <li><span>📍</span> <span class="dyn-address">Las Américas, Mz 42 Lt 5, Ecatepec de Morelos, Edomex</span></li>
+                        <li><span>💬</span> <a href="https://wa.me/5215587431290" class="dyn-whatsapp-link dyn-phone-text">+52 1 55 8743 1290</a></li>
+                        <li><span>🕐</span> <span class="dyn-schedule">Lun-Vie: 10am-7pm | Sáb: 9am-4pm</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Yessy Nails — Todos los derechos reservados. Diseñado para Yessica Marlen Calderón Luna. <a href="admin.html" style="color: inherit; opacity: 0.7; text-decoration: underline; margin-left: 0.5rem;">🔒 Acceso Admin</a></p>
+                <p>Estética & Bioseguridad Profesional</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón Flotante WhatsApp -->
+    <a href="https://wa.me/5215587431290?text=Hola%20Yessy%20Nails,%20tengo%20dudas%20sobre%20cómo%20llegar%20💅" 
+       class="whatsapp-float dyn-whatsapp-link" 
+       target="_blank" 
+       rel="noopener" 
+       aria-label="Contactar por WhatsApp">
+        💬
+    </a>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

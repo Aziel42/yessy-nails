@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tienda Yessy Nails — Compra acrílicos, geles, accesorios y novedades de temporada. Entrega en estudio o a domicilio en Ecatepec.">
+    <title>Tienda & Pedidos 🛍️ — Yessy Nails</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Tienda & Pedidos — Yessy Nails">
+    <meta property="og:description" content="Compra acrílicos, geles, accesorios y novedades de temporada. Entrega en estudio o a domicilio en Ecatepec de Morelos.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yessyNails.com/pedidos.html">
+    <meta property="og:image" content="https://yessyNails.com/img/yessica.jpg">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Yessy Nails">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        /* ── Tienda / Pedidos ──────────────────────────────── */
+        .store-hero {
+            background: linear-gradient(135deg, #F3E1E6 0%, #F7EDE2 100%);
+            padding: 4rem 0 3rem;
+            text-align: center;
+        }
+        .store-hero h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); margin: 0.5rem 0; }
+        .store-hero p  { color: var(--color-text-muted); max-width: 580px; margin: 0 auto; }
+
+        .store-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 2rem;
+            align-items: start;
+            padding: 3rem 0;
+        }
+        @media (max-width: 900px) {
+            .store-layout { grid-template-columns: 1fr; }
+        }
+
+        /* Filtros de categoría */
+        .store-filters {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.75rem;
+        }
+        .filter-chip {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            border: 1.5px solid var(--color-border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+            color: var(--color-text);
+        }
+        .filter-chip:hover, .filter-chip.active {
+            background: var(--color-accent-dark);
+            border-color: var(--color-accent-dark);
+            color: #fff;
+        }
+
+        /* Grid de productos */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+        .product-card {
+            background: #fff;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(74,63,63,0.10);
+        }
+        .product-img {
+            width: 100%; height: 160px; object-fit: cover;
+            background: #F7EDE2;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem;
+        }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; }
+        .product-body { padding: 1rem; }
+        .product-badge {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--color-accent-dark);
+            background: var(--color-accent-light); padding: 0.2rem 0.6rem;
+            border-radius: 10px; display: inline-block; margin-bottom: 0.4rem;
+        }
+        .product-name { font-size: 0.98rem; font-weight: 600; margin: 0.2rem 0; color: var(--color-text); }
+        .product-desc { font-size: 0.82rem; color: var(--color-text-muted); margin: 0.2rem 0 0.75rem; }
+        .product-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+        .product-price { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700; color: var(--color-accent-dark); }
+        .btn-add-cart {
+            padding: 0.4rem 0.9rem; border-radius: 20px;
+            background: var(--color-accent-dark); color: #fff;
+            border: none; cursor: pointer; font-size: 0.82rem; font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .btn-add-cart:hover { opacity: 0.85; }
+        .btn-add-cart:disabled { opacity: 0.5; cursor: default; }
+        .out-of-stock { font-size: 0.78rem; color: #C62828; font-weight: 600; }
+
+        /* Carrito lateral */
+        .cart-panel {
+            background: #fff;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            position: sticky;
+            top: 90px;
+        }
+        .cart-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .cart-empty { text-align: center; color: var(--color-text-muted); padding: 1.5rem 0; font-size: 0.9rem; }
+        .cart-items { list-style: none; padding: 0; margin: 0 0 1rem; }
+        .cart-item {
+            display: flex; gap: 0.6rem; align-items: flex-start;
+            padding: 0.65rem 0; border-bottom: 1px solid var(--color-border);
+        }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-info { flex: 1; min-width: 0; }
+        .cart-item-name { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item-price { font-size: 0.82rem; color: var(--color-text-muted); }
+        .cart-item-qty { display: flex; align-items: center; gap: 0.3rem; }
+        .qty-btn {
+            width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--color-border);
+            background: none; cursor: pointer; font-size: 0.9rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+        }
+        .qty-btn:hover { background: #F3E1E6; }
+        .qty-num { font-size: 0.88rem; min-width: 18px; text-align: center; }
+        .cart-total-row { display: flex; justify-content: space-between; font-weight: 700; margin: 0.75rem 0; font-size: 1rem; }
+        .cart-total-amount { color: var(--color-accent-dark); font-family: var(--font-heading); font-size: 1.15rem; }
+
+        /* Formulario del pedido */
+        .order-form-wrap {
+            margin-top: 1.25rem;
+            border-top: 1px dashed var(--color-border);
+            padding-top: 1.25rem;
+        }
+        .order-form-wrap h4 { font-size: 0.95rem; margin: 0 0 0.75rem; }
+        .entrega-tabs {
+            display: flex; gap: 0.5rem; margin-bottom: 1rem;
+        }
+        .entrega-tab {
+            flex: 1; padding: 0.5rem; text-align: center; border-radius: var(--radius-md);
+            border: 1.5px solid var(--color-border); cursor: pointer; font-size: 0.82rem;
+            font-family: var(--font-body); background: none; transition: all 0.2s;
+        }
+        .entrega-tab.active {
+            background: var(--color-accent-dark); color: #fff; border-color: var(--color-accent-dark);
+        }
+        #delivery-map-wrap {
+            height: 200px; border-radius: var(--radius-md); overflow: hidden;
+            border: 1.5px solid var(--color-border); margin: 0.75rem 0;
+            display: none;
+        }
+        #delivery-map { width: 100%; height: 100%; }
+        #delivery-address-hint {
+            font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 0.5rem; display: none;
+        }
+
+        /* Alertas inline */
+        .store-alert {
+            padding: 0.9rem 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;
+            font-size: 0.9rem; display: none;
+        }
+        .store-alert.success { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+        .store-alert.error   { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+        .store-alert.info    { background: #FFF8E1; color: #E65100; border: 1px solid #FFCC80; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="brand-logo" aria-label="Inicio Yessy Nails">
+                <span class="brand-icon">💅</span>
+                Yessy <span>Nails</span>
+            </a>
+            <nav class="main-nav" aria-label="Navegación principal">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link">Inicio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
+                    <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
+                    <li><a href="pedidos.html" class="nav-link active">Pedidos</a></li>
+                </ul>
+                <div class="header-cta">
+                    <a href="agendar.html" class="btn btn-primary btn-sm">Agendar Cita ✨</a>
+                </div>
+            </nav>
+            <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="store-hero">
+        <div class="container">
+            <span class="section-tag">Tienda en Línea</span>
+            <h1>Material & Novedades 🛍️</h1>
+            <p>Acrílicos, geles, accesorios y novedades de temporada seleccionados por Yessica. Recoge en estudio o pide entrega en Ecatepec.</p>
+        </div>
+    </section>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="container">
+        <div class="store-layout">
+
+            <!-- ── CATÁLOGO ── -->
+            <div>
+                <!-- Filtros de categoría -->
+                <div class="store-filters" id="store-filters">
+                    <button class="filter-chip active" data-cat="Todos">Todos</button>
+                    <button class="filter-chip" data-cat="Acrílico">Acrílico</button>
+                    <button class="filter-chip" data-cat="Geles">Geles</button>
+                    <button class="filter-chip" data-cat="Accesorios">Accesorios</button>
+                    <button class="filter-chip" data-cat="Novedades">Novedades ✨</button>
+                </div>
+
+                <div class="products-grid" id="products-grid">
+                    <!-- Renderizado por JS -->
+                </div>
+            </div>
+
+            <!-- ── CARRITO ── -->
+            <aside>
+                <div class="cart-panel">
+                    <div class="cart-title">
+                        <span>🛒 Tu Carrito</span>
+                        <span id="cart-count-badge" style="background:var(--color-accent-dark);color:#fff;border-radius:12px;padding:0.1rem 0.55rem;font-size:0.78rem;">0</span>
+                    </div>
+
+                    <div id="cart-empty-msg" class="cart-empty">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">🛍️</div>
+                        <p>Tu carrito está vacío.<br>Agrega productos del catálogo.</p>
+                    </div>
+
+                    <ul class="cart-items" id="cart-items-list" style="display:none;"></ul>
+
+                    <div id="cart-total-wrap" style="display:none;">
+                        <div class="cart-total-row">
+                            <span>Total</span>
+                            <span class="cart-total-amount" id="cart-total">$0.00 MXN</span>
+                        </div>
+
+                        <!-- Formulario de datos y entrega -->
+                        <div class="order-form-wrap">
+                            <h4>📦 Datos del Pedido</h4>
+
+                            <div id="order-alert" class="store-alert"></div>
+
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label class="form-label" style="font-size:0.82rem;">Nombre completo *</label>
+                                <input type="text" id="order-nombre" class="form-control" style="padding:0.45rem 0.75rem;" placeholder="Tu nombre">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label class="form-label" style="font-size:0.82rem;">WhatsApp / Teléfono *</label>
+                                <input type="tel" id="order-telefono" class="form-control" style="padding:0.45rem 0.75rem;" placeholder="55 1234 5678">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.9rem;">
+                                <label class="form-label" style="font-size:0.82rem;">Correo (opcional, para recibo)</label>
+                                <input type="email" id="order-correo" class="form-control" style="padding:0.45rem 0.75rem;" placeholder="tu@correo.com">
+                            </div>
+
+                            <h4>🚚 Tipo de Entrega</h4>
+                            <div class="entrega-tabs">
+                                <button type="button" class="entrega-tab active" data-tipo="estudio">🏠 Recoger en estudio</button>
+                                <button type="button" class="entrega-tab" data-tipo="punto_medio_domicilio">📍 Domicilio / punto medio</button>
+                            </div>
+
+                            <div id="delivery-map-wrap">
+                                <div id="delivery-map"></div>
+                            </div>
+                            <p id="delivery-address-hint">📌 Arrastra el marcador para ajustar tu punto de entrega en Ecatepec.</p>
+
+                            <div id="delivery-address-group" class="form-group" style="display:none;margin-bottom:0.75rem;">
+                                <label class="form-label" style="font-size:0.82rem;">Referencia del domicilio</label>
+                                <input type="text" id="order-direccion" class="form-control" style="padding:0.45rem 0.75rem;" placeholder="Calle, colonia, referencias…">
+                            </div>
+
+                            <button type="button" id="btn-place-order" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">
+                                Realizar Pedido 🛍️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- CONFIRMACIÓN DE PEDIDO (oculta) -->
+    <div id="order-success-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:none;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:16px;padding:2.5rem;max-width:440px;width:90%;text-align:center;">
+            <div style="font-size:3rem;margin-bottom:0.75rem;">✨</div>
+            <h3>¡Pedido Registrado!</h3>
+            <p id="order-success-msg" style="color:var(--color-text-muted);font-size:0.95rem;margin:0.75rem 0 1.5rem;"></p>
+            <button type="button" class="btn btn-primary" onclick="STORE.closeSuccess()">Seguir Comprando</button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="brand-logo">
+                        <span class="brand-icon">💅</span>
+                        Yessy <span>Nails</span>
+                    </div>
+                    <p>Diseño, técnica y cuidado profesional para tus manos.</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-title">Navegación</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Inicio</a></li>
+                        <li><a href="servicios.html">Servicios</a></li>
+                        <li><a href="portafolio.html">Portafolio</a></li>
+                        <li><a href="pedidos.html">Tienda</a></li>
+                        <li><a href="chat.html">Chat en Vivo</a></li>
+                        <li><a href="agendar.html">Agendar Cita</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-title">Contacto</h4>
+                    <ul class="footer-contact">
+                        <li><span>📍</span> Las Américas, Ecatepec de Morelos, Edomex</li>
+                        <li><span>💬</span> <a href="https://wa.me/5215587431290" class="dyn-whatsapp-link">+52 1 55 8743 1290</a></li>
+                        <li><span>🕐</span> Lun-Vie: 10am-7pm | Sáb: 9am-4pm</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Yessy Nails — Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <a href="https://wa.me/5215587431290?text=Hola%20Yessy%20Nails,%20quiero%20hacer%20un%20pedido%20🛍️"
+       class="whatsapp-float dyn-whatsapp-link" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+
+    <script src="js/main.js"></script>
+    <script>
+    // ================================================================
+    // YESSY NAILS — Tienda & Pedidos (pedidos.html inline script)
+    // ================================================================
+    const STORE = (() => {
+        // ── Catálogo de productos (estático / editable) ───────────
+        const PRODUCTS = [
+            { id: 1, nombre: 'Polvo Acrílico Clear 30g',         categoria: 'Acrílico',   precio: 85,  emoji: '🧪', desc: 'Polvo acrílico transparente de alta cobertura. Ideal para encapsulados y extensiones.', disponible: true },
+            { id: 2, nombre: 'Polvo Acrílico Natural 30g',       categoria: 'Acrílico',   precio: 85,  emoji: '🧪', desc: 'Tono natural camouflage, cubre perfectamente la uña natural.', disponible: true },
+            { id: 3, nombre: 'Líquido Monómero 60 ml',           categoria: 'Acrílico',   precio: 110, emoji: '💧', desc: 'Monómero de baja fragancia para mezcla ideal con polvo acrílico.', disponible: true },
+            { id: 4, nombre: 'Gel Constructor UV/LED Claro 15g', categoria: 'Geles',      precio: 130, emoji: '✨', desc: 'Gel constructor para extensiones y rellenos. Cura en 60 seg con LED.', disponible: true },
+            { id: 5, nombre: 'Top Coat Gel Sin Limpieza 15ml',   categoria: 'Geles',      precio: 95,  emoji: '💅', desc: 'Sellador final de alto brillo sin residuo pegajoso.', disponible: true },
+            { id: 6, nombre: 'Base Coat Rubber Pink 10ml',       categoria: 'Geles',      precio: 90,  emoji: '💅', desc: 'Base gomosa de adherencia extrema. Protege la uña natural.', disponible: true },
+            { id: 7, nombre: 'Limas Karton 100/180 (paquete 10)',categoria: 'Accesorios', precio: 55,  emoji: '📏', desc: 'Limas de cartón profesionales para acrílico y gel. Pack 10 piezas.', disponible: true },
+            { id: 8, nombre: 'Pincel Kolinsky #8',               categoria: 'Accesorios', precio: 180, emoji: '🖌️', desc: 'Pincel de pelo de kolinsky para acrílico. Punta fina y belly redondo.', disponible: true },
+            { id: 9, nombre: 'Polygel Kit Starter (2 tonos)',    categoria: 'Novedades',  precio: 320, emoji: '🌟', desc: 'Kit de inicio con 2 tubos Polygel (claro y nude), doble cara y slip solution.', disponible: true },
+            { id:10, nombre: 'Glitter Holográfico Set 12 colores',categoria: 'Novedades', precio: 145, emoji: '🌈', desc: 'Set 12 glitters holográficos para diseños artísticos y nail art.', disponible: true },
+            { id:11, nombre: 'Tipsador X Caja (550 Tips)',       categoria: 'Accesorios', precio: 75,  emoji: '🔲', desc: 'Caja 550 tips transparentes tamaños 0-9. Compatibles con acrílico y gel.', disponible: true },
+            { id:12, nombre: 'Lámpara LED 36W Profesional',      categoria: 'Novedades',  precio: 490, emoji: '💡', desc: 'Lámpara LED de 36W. Cura todos los geles y gel polish en 30-60 seg.', disponible: true },
+        ];
+
+        let cart = {}; // { productId: { product, qty } }
+        let tipoEntrega = 'estudio';
+        let deliveryMap = null;
+        let deliveryMarker = null;
+        // Coordenadas base del estudio (Ecatepec)
+        const STUDIO_LAT = 19.5855, STUDIO_LNG = -99.0195;
+
+        function money(v) {
+            return `$${parseFloat(v || 0).toFixed(2)} MXN`;
+        }
+
+        // ── Renderizar catálogo ───────────────────────────────────
+        function renderCatalog(catFilter = 'Todos') {
+            const grid = document.getElementById('products-grid');
+            if (!grid) return;
+
+            const filtered = catFilter === 'Todos'
+                ? PRODUCTS
+                : PRODUCTS.filter(p => p.categoria === catFilter);
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="product-card" data-id="${p.id}">
+                    <div class="product-img">${p.emoji}</div>
+                    <div class="product-body">
+                        <span class="product-badge">${p.categoria}</span>
+                        <div class="product-name">${p.nombre}</div>
+                        <div class="product-desc">${p.desc}</div>
+                        <div class="product-footer">
+                            <span class="product-price">${money(p.precio)}</span>
+                            ${p.disponible
+                                ? `<button class="btn-add-cart" onclick="STORE.addToCart(${p.id})">+ Agregar</button>`
+                                : `<span class="out-of-stock">Sin stock</span>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ── Carrito ───────────────────────────────────────────────
+        function addToCart(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product || !product.disponible) return;
+
+            if (cart[productId]) {
+                cart[productId].qty += 1;
+            } else {
+                cart[productId] = { product, qty: 1 };
+            }
+            renderCart();
+            showCartFeedback(productId);
+        }
+
+        function changeQty(productId, delta) {
+            if (!cart[productId]) return;
+            cart[productId].qty += delta;
+            if (cart[productId].qty <= 0) {
+                delete cart[productId];
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const list   = document.getElementById('cart-items-list');
+            const empty  = document.getElementById('cart-empty-msg');
+            const total  = document.getElementById('cart-total-wrap');
+            const badge  = document.getElementById('cart-count-badge');
+
+            const items = Object.values(cart);
+            const count = items.reduce((s, i) => s + i.qty, 0);
+            const sum   = items.reduce((s, i) => s + i.product.precio * i.qty, 0);
+
+            badge.textContent = count;
+
+            if (items.length === 0) {
+                list.style.display  = 'none';
+                total.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            list.style.display  = 'block';
+            total.style.display = 'block';
+
+            list.innerHTML = items.map(({ product, qty }) => `
+                <li class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name" title="${product.nombre}">${product.nombre}</div>
+                        <div class="cart-item-price">${money(product.precio)} c/u</div>
+                    </div>
+                    <div class="cart-item-qty">
+                        <button class="qty-btn" onclick="STORE.changeQty(${product.id}, -1)">−</button>
+                        <span class="qty-num">${qty}</span>
+                        <button class="qty-btn" onclick="STORE.changeQty(${product.id}, +1)">+</button>
+                    </div>
+                </li>
+            `).join('');
+
+            document.getElementById('cart-total').textContent = money(sum);
+        }
+
+        function showCartFeedback(productId) {
+            const cards = document.querySelectorAll(`.product-card[data-id="${productId}"] .btn-add-cart`);
+            cards.forEach(btn => {
+                const original = btn.textContent;
+                btn.textContent = '✓ Agregado';
+                btn.disabled = true;
+                setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1200);
+            });
+        }
+
+        // ── Mapa de entrega (Leaflet) ─────────────────────────────
+        function initDeliveryMap() {
+            if (deliveryMap) return; // ya inicializado
+            setTimeout(() => {
+                deliveryMap = L.map('delivery-map').setView([STUDIO_LAT, STUDIO_LNG], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19
+                }).addTo(deliveryMap);
+
+                // Marcador del estudio (fijo, referencia)
+                L.marker([STUDIO_LAT, STUDIO_LNG], {
+                    icon: L.divIcon({ html: '<div style="font-size:1.4rem;">💅</div>', className: '', iconAnchor: [12, 12] })
+                }).addTo(deliveryMap).bindPopup('Yessy Nails (Estudio)');
+
+                // Marcador arrastrable del cliente
+                deliveryMarker = L.marker([STUDIO_LAT, STUDIO_LNG], { draggable: true }).addTo(deliveryMap);
+                deliveryMarker.bindPopup('Tu punto de entrega — arrástrame').openPopup();
+
+                deliveryMap.invalidateSize();
+            }, 100);
+        }
+
+        function getDeliveryCoords() {
+            if (!deliveryMarker) return { lat: null, lng: null };
+            const ll = deliveryMarker.getLatLng();
+            return { lat: ll.lat, lng: ll.lng };
+        }
+
+        // ── Tipo de entrega ───────────────────────────────────────
+        function setEntrega(tipo) {
+            tipoEntrega = tipo;
+            document.querySelectorAll('.entrega-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tipo === tipo);
+            });
+            const mapWrap  = document.getElementById('delivery-map-wrap');
+            const hint     = document.getElementById('delivery-address-hint');
+            const addrGrp  = document.getElementById('delivery-address-group');
+
+            if (tipo === 'punto_medio_domicilio') {
+                mapWrap.style.display  = 'block';
+                hint.style.display     = 'block';
+                addrGrp.style.display  = 'block';
+                initDeliveryMap();
+            } else {
+                mapWrap.style.display  = 'none';
+                hint.style.display     = 'none';
+                addrGrp.style.display  = 'none';
+            }
+        }
+
+        // ── Enviar pedido ─────────────────────────────────────────
+        async function placeOrder() {
+            const alertBox = document.getElementById('order-alert');
+            const btn      = document.getElementById('btn-place-order');
+
+            const nombre   = document.getElementById('order-nombre').value.trim();
+            const telefono = document.getElementById('order-telefono').value.trim();
+            const correo   = document.getElementById('order-correo').value.trim();
+            const direccion= document.getElementById('order-direccion').value.trim();
+
+            const showAlert = (msg, type) => {
+                alertBox.className = `store-alert ${type}`;
+                alertBox.textContent = msg;
+                alertBox.style.display = 'block';
+            };
+
+            if (!nombre)    return showAlert('Ingresa tu nombre completo.', 'error');
+            if (!telefono)  return showAlert('Ingresa tu teléfono / WhatsApp.', 'error');
+            if (Object.keys(cart).length === 0) return showAlert('Tu carrito está vacío.', 'error');
+
+            const items = Object.values(cart).map(({ product, qty }) => ({
+                id: product.id,
+                nombre: product.nombre,
+                precio: product.precio,
+                cantidad: qty
+            }));
+
+            const { lat, lng } = getDeliveryCoords();
+
+            const payload = {
+                nombre_cliente: nombre,
+                telefono_cliente: telefono,
+                correo_cliente: correo || null,
+                items_json: items,
+                tipo_entrega: tipoEntrega,
+                direccion_entrega: tipoEntrega === 'punto_medio_domicilio' ? (direccion || null) : null,
+                lat_entrega: tipoEntrega === 'punto_medio_domicilio' ? lat : null,
+                lng_entrega: tipoEntrega === 'punto_medio_domicilio' ? lng : null
+            };
+
+            btn.disabled = true;
+            btn.textContent = 'Enviando pedido...';
+            alertBox.style.display = 'none';
+
+            try {
+                const res  = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+
+                if (json.success) {
+                    // Mostrar overlay de éxito
+                    const overlay = document.getElementById('order-success-overlay');
+                    document.getElementById('order-success-msg').textContent =
+                        `¡Gracias, ${nombre}! Tu pedido fue registrado. Te contactaremos por WhatsApp para coordinar el pago y la entrega. 💕`;
+                    overlay.style.display = 'flex';
+                    // Limpiar carrito
+                    cart = {};
+                    renderCart();
+                    document.getElementById('order-nombre').value    = '';
+                    document.getElementById('order-telefono').value  = '';
+                    document.getElementById('order-correo').value    = '';
+                    document.getElementById('order-direccion').value = '';
+                } else {
+                    showAlert(json.message || 'No se pudo registrar el pedido. Inténtalo de nuevo.', 'error');
+                }
+            } catch (err) {
+                showAlert('Error de conexión. Verifica tu internet e inténtalo de nuevo.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Realizar Pedido 🛍️';
+            }
+        }
+
+        function closeSuccess() {
+            document.getElementById('order-success-overlay').style.display = 'none';
+        }
+
+        // ── Init ──────────────────────────────────────────────────
+        function init() {
+            renderCatalog();
+
+            // Filtros
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                    renderCatalog(chip.dataset.cat);
+                });
+            });
+
+            // Tabs de entrega
+            document.querySelectorAll('.entrega-tab').forEach(btn => {
+                btn.addEventListener('click', () => setEntrega(btn.dataset.tipo));
+            });
+
+            // Botón de pedido
+            const orderBtn = document.getElementById('btn-place-order');
+            if (orderBtn) orderBtn.addEventListener('click', placeOrder);
+        }
+
+        return { init, addToCart, changeQty, closeSuccess };
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => STORE.init());
+    </script>
+</body>
+</html>
