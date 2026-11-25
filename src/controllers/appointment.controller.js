@@ -174,11 +174,14 @@ export async function create(req, res) {
             return errorResponse(res, 'No puedes agendar una cita en una fecha pasada.', 400);
         }
 
-        // Normalizar: folio de anticipo vacío → null; anticipo por defecto $50
+        // Normalizar método de pago y anticipo:
+        // 'sucursal' se normaliza a 'efectivo' para cumplir el CHECK de la tabla citas.
         const folio = sanitizeStr(req.body.folio_transferencia);
-        const metodoPago = ['efectivo', 'transferencia', 'pasarela_futura'].includes(req.body.metodo_pago)
-            ? req.body.metodo_pago
+        const metodoRaw = sanitizeStr(req.body.metodo_pago);
+        const metodoPago = ['efectivo', 'sucursal', 'transferencia', 'pasarela_futura'].includes(metodoRaw)
+            ? (metodoRaw === 'sucursal' ? 'efectivo' : metodoRaw)
             : 'efectivo';
+        const esPagoEnSucursal = metodoPago === 'efectivo';
 
         const data = {
             ...req.body,
@@ -189,8 +192,9 @@ export async function create(req, res) {
             hora_cita,
             servicio_id,
             metodo_pago: metodoPago,
-            folio_transferencia: folio || null,
-            anticipo_requerido: req.body.anticipo_requerido != null ? req.body.anticipo_requerido : 50,
+            folio_transferencia: esPagoEnSucursal ? 'Sin anticipo (Pago en sucursal)' : (folio || null),
+            anticipo_requerido: esPagoEnSucursal ? 0 : (req.body.anticipo_requerido != null ? req.body.anticipo_requerido : 50),
+            estado_pago: 'pendiente',
             total_estimado: req.body.total_estimado || servicio.precio_base
         };
 

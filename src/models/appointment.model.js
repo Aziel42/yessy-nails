@@ -145,6 +145,8 @@ export async function checkAvailability(fecha, hora, excludeId = null) {
  * Auto-cancelación de citas pendientes sin confirmar anticipo.
  * Cancela las citas en estado 'pendiente' cuya clienta aún no ha enviado
  * folio de anticipo y que superan el límite de horas configurado.
+ * Excluye explícitamente citas con pago en sucursal ('efectivo' / 'sucursal')
+ * o marcadas como 'Sin anticipo (Pago en sucursal)'.
  * @param {number} hoursLimit - Horas máximas para confirmar
  * @returns {Promise<Array>} Citas canceladas (con correo_cliente para notificaciones)
  */
@@ -158,6 +160,8 @@ export async function autoCancelExpired(hoursLimit = 24) {
         .eq('estado_cita', 'pendiente')
         .eq('estado_confirmacion_cliente', 'pendiente')
         .is('folio_transferencia', null)
+        .not('metodo_pago', 'in', '("efectivo","sucursal")')
+        .neq('estado_pago', 'Sin anticipo (Pago en sucursal)')
         .lt('fecha_creacion', cutoff)
         .select('id, nombre_cliente, correo_cliente, fecha_cita, hora_cita');
 

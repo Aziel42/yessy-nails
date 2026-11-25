@@ -115,11 +115,23 @@ async function fetchWhatsappConfig() {
 function checkCotizadorParams() {
     const params = new URLSearchParams(window.location.search);
 
-    // Si viene del portafolio con un diseño de referencia, rellenar las notas
-    if (params.has('notas_diseno')) {
+    // Si viene del portafolio con un diseño de referencia (?diseno=... o ?notas_diseno=...), rellenar las notas
+    const disenoParam = params.get('diseno');
+    if (disenoParam && disenoParam.trim()) {
         const notasInput = document.getElementById('notas_diseno');
         if (notasInput && !notasInput.value) {
-            notasInput.value = params.get('notas_diseno');
+            notasInput.value = `Diseño elegido del portafolio: ${disenoParam.trim()}`;
+        }
+        return; // No seguir buscando parámetros de cotizador
+    }
+
+    if (params.has('notas_diseno')) {
+        const notasInput = document.getElementById('notas_diseno');
+        const rawNotas = (params.get('notas_diseno') || '').trim();
+        if (notasInput && !notasInput.value && rawNotas) {
+            notasInput.value = rawNotas.startsWith('Diseño')
+                ? rawNotas
+                : `Diseño elegido del portafolio: ${rawNotas}`;
         }
         return; // No seguir buscando parámetros de cotizador
     }
@@ -193,18 +205,180 @@ function applyPreselectedService() {
 }
 
 /* ----------------------------------------------------------------
-   4. TARJETAS DE MÉTODO DE PAGO
+   4. TARJETAS DE MÉTODO DE PAGO Y PANELES DINÁMICOS
    ---------------------------------------------------------------- */
+let speiDataLoaded = false;
+
+function onPaymentChange() {
+    const checked = document.querySelector('input[name="metodo_pago"]:checked');
+    const val = checked ? checked.value : 'efectivo';
+
+    const panelSucursal = document.getElementById('panel-sucursal');
+    const panelSpei     = document.getElementById('panel-spei');
+    const panelTarjeta  = document.getElementById('panel-tarjeta');
+
+    if (panelSucursal) panelSucursal.style.display = val === 'efectivo'        ? 'block' : 'none';
+    if (panelSpei)     panelSpei.style.display     = val === 'transferencia'   ? 'block' : 'none';
+    if (panelTarjeta)  panelTarjeta.style.display  = val === 'pasarela_futura' ? 'block' : 'none';
+
+    if (val === 'transferencia' && !speiDataLoaded) {
+        loadSpeiData();
+    }
+}
+
+async function loadSpeiData() {
+    const loadingEl = document.getElementById('spei-loading');
+    const infoEl    = document.getElementById('spei-info');
+    try {
+        const res = await fetch('/api/config');
+        const json = await res.json();
+        const cfg = json.data || {};
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (infoEl)    infoEl.style.display    = 'block';
+        const bancoEl   = document.getElementById('spei-banco');
+        const titularEl = document.getElementById('spei-titular');
+        const clabeEl   = document.getElementById('spei-clabe');
+        if (bancoEl)   bancoEl.textContent   = cfg.banco_transferencia   || 'Banco no configurado';
+        if (titularEl) titularEl.textContent = cfg.titular_transferencia || 'Titular no configurado';
+        if (clabeEl)   clabeEl.textContent   = cfg.clabe_transferencia   || '—';
+        speiDataLoaded = true;
+    } catch (e) {
+        if (loadingEl) {
+            loadingEl.textContent = 'No se pudieron cargar los datos bancarios. Escríbenos por WhatsApp.';
+        }
+    }
+}
+
+function validateCardFields() {
+    const num  = (document.getElementById('card-number')?.value || '').replace(/\s/g, '');
+    const name = (document.getElementById('card-name')?.value || '').trim();
+    const exp  = (document.getElementById('card-exp')?.value || '').trim();
+    const cvv  = (document.getElementById('card-cvv')?.value || '').trim();
+
+    if (!/^\d{16}$/.test(num)) {
+        return { valid: false, message: 'El número de tarjeta debe tener exactamente 16 dígitos.' };
+    }
+    if (name.length < 3) {
+        return { valid: false, message: 'Ingresa el nombre completo del titular de la tarjeta.' };
+    }
+    const expMatch = exp.match(/^(0[1-9]|1[0-2])\/(\d{2})$/);
+    if (!expMatch) {
+        return { valid: false, message: 'La fecha de expiración debe tener formato MM/AA válido.' };
+    }
+    const expMonth = parseInt(expMatch[1], 10);
+    const expYear  = 2000 + parseInt(expMatch[2], 10);
+    const now = new Date();
+    if (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < (now.getMonth() + 1))) {
+        return { valid: false, message: 'La tarjeta ingresada está vencida.' };
+    }
+    if (!/^\d{3}$/.test(cvv)) {
+        return { valid: false, message: 'El CVV debe tener exactamente 3 dígitos.' };
+    }
+
+    return { valid: true, last4: num.slice(-4) };
+}
+
+window.copyClabe = function copyClabe() {
+    const clabe = document.getElementById('spei-clabe')?.textContent;
+    if (clabe && clabe !== '—') {
+        navigator.clipboard.writeText(clabe).then(() => {
+            const btn = document.getElementById('btn-copy-clabe');
+            if (btn) {
+                btn.textContent = '✅ Copiado';
+                setTimeout(() => { btn.textContent = '📋 Copiar'; }, 2000);
+            }
+        }).catch(() => { alert('CLABE: ' + clabe); });
+    }
+};
+
+window.formatCardNumber = function formatCardNumber(input) {
+    const v = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = v.replace(/(.{4})/g, '$1 ').trim();
+};
+
+window.formatCardExp = function formatCardExp(input) {
+    let v = input.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 3) v = v.substring(0, 2) + '/' + v.substring(2);
+    input.value = v;
+};
+
+window.updateCardVisual = function updateCardVisual() {
+    const num  = (document.getElementById('card-number')?.value || '').replace(/\s/g, '').padEnd(16, '•');
+    const name = (document.getElementById('card-name')?.value || '').toUpperCase() || 'NOMBRE TITULAR';
+    const exp  = document.getElementById('card-exp')?.value || 'MM/AA';
+
+    let formatted = '';
+    for (let i = 0; i < 16; i++) {
+        if (i > 0 && i % 4 === 0) formatted += ' ';
+        formatted += num[i] || '•';
+    }
+
+    const numDisp  = document.getElementById('card-number-display');
+    const nameDisp = document.getElementById('card-name-display');
+    const expDisp  = document.getElementById('card-exp-display');
+    if (numDisp)  numDisp.textContent  = formatted;
+    if (nameDisp) nameDisp.textContent = name.substring(0, 22);
+    if (expDisp)  expDisp.textContent  = exp;
+};
+
+window.simulateCardAuth = function simulateCardAuth() {
+    const resultBox = document.getElementById('card-auth-result');
+    const btn = document.getElementById('btn-authorize-card');
+    const check = validateCardFields();
+
+    if (!check.valid) {
+        if (resultBox) {
+            resultBox.style.display = 'block';
+            resultBox.style.background = '#FFEBEE';
+            resultBox.style.color = '#C62828';
+            resultBox.style.border = '1px solid #FFCDD2';
+            resultBox.textContent = `⚠️ ${check.message}`;
+        }
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Procesando...';
+    }
+    if (resultBox) resultBox.style.display = 'none';
+
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '🔒 Autorizar Anticipo de $50 MXN (Prueba)';
+        }
+        if (resultBox) {
+            resultBox.style.display = 'block';
+            resultBox.style.background = '#E8F5E9';
+            resultBox.style.color = '#2E7D32';
+            resultBox.style.border = '1px solid #A5D6A7';
+            resultBox.innerHTML = `✅ <strong>Autorización simulada aprobada.</strong> Anticipo de $50 MXN registrado (terminación ****${check.last4}) en modo prueba. No se realizó ningún cargo real.`;
+        }
+    }, 900);
+};
+
 function initPaymentMethodCards() {
+    const radios = document.querySelectorAll('input[name="metodo_pago"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', onPaymentChange);
+    });
+
     const labels = document.querySelectorAll('.payment-radio-label:not(.disabled)');
     labels.forEach(label => {
         label.addEventListener('click', () => {
             const radio = label.querySelector('input[type="radio"]');
             if (radio && !radio.disabled) {
-                radio.checked = true;
+                if (!radio.checked) {
+                    radio.checked = true;
+                }
+                onPaymentChange();
             }
         });
     });
+
+    // Estado inicial según la opción marcada por defecto
+    onPaymentChange();
 }
 
 /* ----------------------------------------------------------------
@@ -242,11 +416,23 @@ function initAppointmentForm() {
             totalEstimado = parseFloat(selectServicio.selectedOptions[0].getAttribute('data-price')) || 500.00;
         }
 
-        const folioTransferencia = form.folio_transferencia
-            ? form.folio_transferencia.value.trim()
-            : (document.getElementById('folio_transferencia')
-                ? document.getElementById('folio_transferencia').value.trim()
-                : '');
+        let folioTransferencia = null;
+        let anticipoRequerido = 50;
+
+        if (metodoPago === 'efectivo') {
+            anticipoRequerido = 0;
+            folioTransferencia = null;
+        } else if (metodoPago === 'transferencia') {
+            const rawFolio = document.getElementById('folio_transferencia')?.value.trim() || '';
+            folioTransferencia = rawFolio || null;
+        } else if (metodoPago === 'pasarela_futura') {
+            const cardCheck = validateCardFields();
+            if (!cardCheck.valid) {
+                showAlert(cardCheck.message, 'error');
+                return;
+            }
+            folioTransferencia = `TARJETA-****${cardCheck.last4}`;
+        }
 
         const payload = {
             nombre_cliente: nombreCliente,
@@ -259,8 +445,8 @@ function initAppointmentForm() {
             notas_diseno: notasDiseno,
             total_estimado: totalEstimado,
             metodo_pago: metodoPago,
-            anticipo_requerido: 50,
-            folio_transferencia: folioTransferencia || null
+            anticipo_requerido: anticipoRequerido,
+            folio_transferencia: folioTransferencia
         };
 
         btnSubmit.disabled = true;
@@ -344,9 +530,11 @@ function showConfirmationView(cita, servicioNombre) {
     document.getElementById('conf-fecha').textContent = `${formatDate(cita.fecha_cita)} a las ${formatTime(cita.hora_cita)}`;
     document.getElementById('conf-total').textContent = `$${parseFloat(cita.total_estimado || 0).toFixed(2)} MXN`;
 
-    const metodoTexto = cita.metodo_pago === 'transferencia' 
-        ? 'Transferencia bancaria previa' 
-        : 'Pago en sucursal (Efectivo)';
+    const metodoTexto = cita.metodo_pago === 'transferencia'
+        ? 'Transferencia SPEI ($50 anticipo)'
+        : cita.metodo_pago === 'pasarela_futura'
+            ? 'Pago con tarjeta — Modo prueba ($50 anticipo)'
+            : 'Pago en sucursal (100% efectivo — Sin anticipo)';
     document.getElementById('conf-metodo').textContent = metodoTexto;
 
     // Configurar botón opcional de comprobante por WhatsApp a Yessica

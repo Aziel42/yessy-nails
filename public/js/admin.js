@@ -709,7 +709,14 @@ const ADMIN_APP = {
 
             // Etiqueta de estado de anticipo
             let anticipoTag = '';
-            if (c.estado_cita === 'pendiente') {
+            if (
+                c.folio_transferencia === 'Sin anticipo (Pago en sucursal)' ||
+                c.estado_pago === 'Sin anticipo (Pago en sucursal)' ||
+                c.metodo_pago === 'efectivo' ||
+                c.metodo_pago === 'sucursal'
+            ) {
+                anticipoTag = `<div style="margin-top:0.3rem;"><span style="background:#FFF8E1;color:#E65100;border-radius:6px;padding:1px 8px;font-size:0.75rem;font-weight:700;">💵 Sin anticipo (Pago en sucursal)</span></div>`;
+            } else if (c.estado_cita === 'pendiente') {
                 if (c.folio_transferencia) {
                     anticipoTag = `<div style="margin-top:0.3rem;"><span style="background:#E8F5E9;color:#2E7D32;border-radius:6px;padding:1px 8px;font-size:0.75rem;font-weight:700;">✅ Folio enviado</span></div>`;
                 } else {

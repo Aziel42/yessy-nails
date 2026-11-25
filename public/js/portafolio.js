@@ -191,10 +191,10 @@ function openModal(item) {
         modalDate.textContent = `Creación de autor • ${formattedDate}`;
     }
 
-    // Enlace a agendar.html con el nombre del diseño como referencia en las notas
+    // Enlace a agendar.html con el nombre del diseño en la URL (?diseno=...)
     if (modalWaBtn) {
         const params = new URLSearchParams({
-            notas_diseno: `Diseño de referencia del portafolio: "${item.titulo}" (Estilo: ${item.estilo})`
+            diseno: item.titulo || ''
         });
         modalWaBtn.href = `agendar.html?${params.toString()}`;
         // Eliminar atributos de nueva pestaña que ya no aplican
