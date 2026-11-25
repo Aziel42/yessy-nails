@@ -51,7 +51,7 @@ jest.unstable_mockModule('../src/models/appointment.model.js', () => ({
     createAppointment: async (data) => ({ id: 99, ...data }),
     updateAppointment: async (id, data) => ({ id, ...data }),
     deleteAppointment: async () => true,
-    autoCancelExpired: async () => 0
+    autoCancelExpired: async () => []   // ahora devuelve array de citas canceladas
 }));
 
 jest.unstable_mockModule('../src/models/chat.model.js', () => ({

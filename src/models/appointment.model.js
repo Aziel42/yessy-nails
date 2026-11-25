@@ -146,7 +146,7 @@ export async function checkAvailability(fecha, hora, excludeId = null) {
  * Cancela las citas en estado 'pendiente' cuya clienta aún no ha enviado
  * folio de anticipo y que superan el límite de horas configurado.
  * @param {number} hoursLimit - Horas máximas para confirmar
- * @returns {Promise<number>} Número de citas canceladas
+ * @returns {Promise<Array>} Citas canceladas (con correo_cliente para notificaciones)
  */
 export async function autoCancelExpired(hoursLimit = 24) {
     const horas = Number(hoursLimit) > 0 ? Number(hoursLimit) : 24;
@@ -159,10 +159,10 @@ export async function autoCancelExpired(hoursLimit = 24) {
         .eq('estado_confirmacion_cliente', 'pendiente')
         .is('folio_transferencia', null)
         .lt('fecha_creacion', cutoff)
-        .select('id');
+        .select('id, nombre_cliente, correo_cliente, fecha_cita, hora_cita');
 
     if (error) throw new Error(error.message);
-    return (data || []).length;
+    return data || [];
 }
 
 /**

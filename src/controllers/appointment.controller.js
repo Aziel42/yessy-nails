@@ -13,6 +13,7 @@ import { sanitizeStr, isValidEmail, safeInt } from '../utils/sanitize.js';
 
 /**
  * Ejecuta la auto-cancelación si el interruptor está activado en la config.
+ * Envía correo de cancelación a cada clienta afectada que tenga correo.
  * @returns {Promise<{activo:boolean, canceladas:number}>}
  */
 async function runAutoCancel() {
@@ -21,8 +22,20 @@ async function runAutoCancel() {
         const activo = Boolean(config && config.auto_cancelar_sin_confirmar);
         if (!activo) return { activo: false, canceladas: 0 };
 
-        const canceladas = await AppointmentModel.autoCancelExpired(config.horas_limite_confirmacion || 24);
-        return { activo: true, canceladas };
+        const citasCanceladas = await AppointmentModel.autoCancelExpired(
+            config.horas_limite_confirmacion || 24
+        );
+
+        const motivo = 'No se recibió el anticipo de $50 MXN en el tiempo establecido. Puedes reagendar tu cita cuando gustes.';
+
+        // Notificar a cada clienta (en paralelo, sin bloquear si alguna falla)
+        await Promise.allSettled(
+            citasCanceladas
+                .filter(c => c.correo_cliente)
+                .map(c => enviarCorreoCancelacion(c, motivo))
+        );
+
+        return { activo: true, canceladas: citasCanceladas.length };
     } catch (e) {
         console.warn('⚠️  Error en auto-cancelación de citas:', e.message);
         return { activo: false, canceladas: 0 };
@@ -125,12 +138,13 @@ export async function getById(req, res) {
  */
 export async function create(req, res) {
     try {
-        const nombre_cliente  = sanitizeStr(req.body.nombre_cliente);
+        const nombre_cliente   = sanitizeStr(req.body.nombre_cliente);
         const telefono_cliente = sanitizeStr(req.body.telefono_cliente);
-        const correo_cliente  = sanitizeStr(req.body.correo_cliente);
-        const fecha_cita      = sanitizeStr(req.body.fecha_cita);
-        const hora_cita       = sanitizeStr(req.body.hora_cita);
-        const servicio_id     = safeInt(req.body.servicio_id);
+        // Acepta tanto correo_cliente como el alias email por compatibilidad con el frontend
+        const correo_cliente   = sanitizeStr(req.body.correo_cliente || req.body.email);
+        const fecha_cita       = sanitizeStr(req.body.fecha_cita);
+        const hora_cita        = sanitizeStr(req.body.hora_cita);
+        const servicio_id      = safeInt(req.body.servicio_id);
 
         // Validaciones obligatorias
         if (!nombre_cliente || !telefono_cliente || !servicio_id || !fecha_cita || !hora_cita) {
@@ -180,13 +194,15 @@ export async function create(req, res) {
             total_estimado: req.body.total_estimado || servicio.precio_base
         };
 
-        // Registro ligero de la clienta (sin contraseña), si dejó correo
+        // Registro ligero de la clienta (sin contraseña), si dejó correo.
+        // acepta_promociones: true para que reciba futuras ofertas del salón.
         if (data.correo_cliente) {
             try {
                 const clienta = await ClienteModel.upsertCliente({
                     nombre: data.nombre_cliente,
                     correo: data.correo_cliente,
-                    telefono: data.telefono_cliente
+                    telefono: data.telefono_cliente,
+                    acepta_promociones: true
                 });
                 if (clienta) data.cliente_id = clienta.id;
             } catch (e) {

@@ -191,11 +191,15 @@ function openModal(item) {
         modalDate.textContent = `Creación de autor • ${formattedDate}`;
     }
 
-    // Enlace de WhatsApp con mensaje prellenado sobre este diseño específico
+    // Enlace a agendar.html con el nombre del diseño como referencia en las notas
     if (modalWaBtn) {
-        const textMessage = `Hola Yessica, me encantó el diseño "${item.titulo}" de tu portafolio (Estilo: ${item.estilo}). ¿Tienes disponibilidad para hacerme un set similar en Yessy Nails? 💅✨`;
-        const waLink = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(textMessage)}`;
-        modalWaBtn.href = waLink;
+        const params = new URLSearchParams({
+            notas_diseno: `Diseño de referencia del portafolio: "${item.titulo}" (Estilo: ${item.estilo})`
+        });
+        modalWaBtn.href = `agendar.html?${params.toString()}`;
+        // Eliminar atributos de nueva pestaña que ya no aplican
+        modalWaBtn.removeAttribute('target');
+        modalWaBtn.removeAttribute('rel');
     }
 
     // Mostrar modal con animación y bloquear scroll

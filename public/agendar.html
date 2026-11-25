@@ -113,6 +113,15 @@
                             <input type="tel" id="telefono_cliente" name="telefono_cliente" class="form-control" placeholder="Ej. 55 8743 1290" required>
                         </div>
                     </div>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label" for="correo">Correo Electrónico *</label>
+                        <input type="email" id="correo" name="correo" class="form-control"
+                               placeholder="Ej. mariana@gmail.com" required
+                               autocomplete="email">
+                        <small style="display:block; margin-top:0.35rem; color:var(--color-text-muted); font-size:0.8rem;">
+                            Te enviaremos la confirmación de tu cita e instrucciones de anticipo a este correo.
+                        </small>
+                    </div>
                 </div>
 
                 <!-- Sección 2: Selección de Servicio -->
@@ -346,6 +355,10 @@
                 <div class="receipt-row">
                     <span>Teléfono / WhatsApp:</span>
                     <span id="conf-telefono">-</span>
+                </div>
+                <div class="receipt-row" id="conf-correo-row" style="display:none;">
+                    <span>Correo:</span>
+                    <span id="conf-correo">-</span>
                 </div>
                 <div class="receipt-row">
                     <span>Servicio Solicitado:</span>

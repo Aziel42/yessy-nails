@@ -110,10 +110,20 @@ async function fetchWhatsappConfig() {
 }
 
 /* ----------------------------------------------------------------
-   3. AUTO-RELLENAR DATOS SI VIENE DEL COTIZADOR
+   3. AUTO-RELLENAR DATOS SI VIENE DEL COTIZADOR O DEL PORTAFOLIO
    ---------------------------------------------------------------- */
 function checkCotizadorParams() {
     const params = new URLSearchParams(window.location.search);
+
+    // Si viene del portafolio con un diseño de referencia, rellenar las notas
+    if (params.has('notas_diseno')) {
+        const notasInput = document.getElementById('notas_diseno');
+        if (notasInput && !notasInput.value) {
+            notasInput.value = params.get('notas_diseno');
+        }
+        return; // No seguir buscando parámetros de cotizador
+    }
+
     let quoteData = null;
 
     // Intentar leer desde URL
@@ -214,14 +224,15 @@ function initAppointmentForm() {
         // Validaciones
         const nombreCliente = form.nombre_cliente.value.trim();
         const telefonoCliente = form.telefono_cliente.value.trim();
+        const correoCliente = (document.getElementById('correo')?.value || '').trim();
         const servicioId = parseInt(form.servicio_id.value);
         const fechaCita = form.fecha_cita.value;
         const horaCita = form.hora_cita.value;
         const notasDiseno = form.notas_diseno.value.trim();
         const metodoPago = form.metodo_pago ? form.metodo_pago.value : 'efectivo';
 
-        if (!nombreCliente || !telefonoCliente || !servicioId || !fechaCita || !horaCita) {
-            showAlert('Por favor llena todos los campos obligatorios (*).', 'error');
+        if (!nombreCliente || !telefonoCliente || !correoCliente || !servicioId || !fechaCita || !horaCita) {
+            showAlert('Por favor llena todos los campos obligatorios (*), incluyendo tu correo electrónico.', 'error');
             return;
         }
 
@@ -240,6 +251,8 @@ function initAppointmentForm() {
         const payload = {
             nombre_cliente: nombreCliente,
             telefono_cliente: telefonoCliente,
+            correo_cliente: correoCliente,   // campo principal que usa el controlador
+            email: correoCliente,            // alias por compatibilidad
             servicio_id: servicioId,
             fecha_cita: fechaCita,
             hora_cita: horaCita,
@@ -318,6 +331,15 @@ function showConfirmationView(cita, servicioNombre) {
     document.getElementById('conf-folio').textContent = `#${cita.id}`;
     document.getElementById('conf-nombre').textContent = cita.nombre_cliente;
     document.getElementById('conf-telefono').textContent = cita.telefono_cliente;
+
+    // Mostrar correo si está disponible
+    const confCorreoRow = document.getElementById('conf-correo-row');
+    const confCorreo = document.getElementById('conf-correo');
+    if (cita.correo_cliente && confCorreo && confCorreoRow) {
+        confCorreo.textContent = cita.correo_cliente;
+        confCorreoRow.style.display = 'flex';
+    }
+
     document.getElementById('conf-servicio').textContent = servicioNombre;
     document.getElementById('conf-fecha').textContent = `${formatDate(cita.fecha_cita)} a las ${formatTime(cita.hora_cita)}`;
     document.getElementById('conf-total').textContent = `$${parseFloat(cita.total_estimado || 0).toFixed(2)} MXN`;
