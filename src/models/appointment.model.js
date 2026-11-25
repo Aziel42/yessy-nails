@@ -170,20 +170,57 @@ export async function autoCancelExpired(hoursLimit = 24) {
 }
 
 /**
- * Archiva citas cuya fecha ya pasó hace 7 días o más y aún no están archivadas.
- * @param {string} cutoffDate - Fecha límite YYYY-MM-DD
- * @returns {Promise<number>} Cantidad de citas archivadas
+ * Archiva citas según su estado y antigüedad:
+ * - Cerradas ('completada' o 'cancelada'): cuando su fecha_cita tiene 7 días o más.
+ * - Caducadas ('pendiente' o 'confirmada'): cuando fecha_cita + hora_cita ya pasó hace 24 horas o más.
+ * @param {string} cutoffDate - Fecha límite YYYY-MM-DD para citas cerradas (7 días atrás)
+ * @returns {Promise<number>} Cantidad total de citas archivadas
  */
 export async function archiveOldAppointments(cutoffDate) {
-    const { data, error } = await supabaseAdmin
+    // 1. Citas cerradas ('completada' o 'cancelada') con >= 7 días
+    const { data: closedArchived, error: closedError } = await supabaseAdmin
         .from(TABLE)
         .update({ estado_cita: 'archivada' })
+        .in('estado_cita', ['completada', 'cancelada'])
         .lte('fecha_cita', cutoffDate)
-        .neq('estado_cita', 'archivada')
         .select('id');
 
-    if (error) throw new Error(error.message);
-    return (data || []).length;
+    if (closedError) throw new Error(closedError.message);
+
+    // 2. Citas abiertas ('pendiente' o 'confirmada') cuya fecha y hora ya pasaron hace >= 24 horas
+    const nowMs = Date.now();
+    const cutoff24hMs = nowMs - 24 * 60 * 60 * 1000;
+    const todayStr = new Date(nowMs).toISOString().split('T')[0];
+
+    const { data: openCandidates, error: openError } = await supabaseAdmin
+        .from(TABLE)
+        .select('id, fecha_cita, hora_cita')
+        .in('estado_cita', ['pendiente', 'confirmada'])
+        .lte('fecha_cita', todayStr);
+
+    if (openError) throw new Error(openError.message);
+
+    const expiredIds = (openCandidates || [])
+        .filter(c => {
+            const timePart = c.hora_cita || '23:59:59';
+            const apptMs = new Date(`${c.fecha_cita}T${timePart}`).getTime();
+            return !Number.isNaN(apptMs) && apptMs <= cutoff24hMs;
+        })
+        .map(c => c.id);
+
+    let expiredArchivedCount = 0;
+    if (expiredIds.length > 0) {
+        const { data: expiredArchived, error: expireUpdateError } = await supabaseAdmin
+            .from(TABLE)
+            .update({ estado_cita: 'archivada' })
+            .in('id', expiredIds)
+            .select('id');
+
+        if (expireUpdateError) throw new Error(expireUpdateError.message);
+        expiredArchivedCount = (expiredArchived || []).length;
+    }
+
+    return (closedArchived || []).length + expiredArchivedCount;
 }
 
 /**

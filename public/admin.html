@@ -369,7 +369,7 @@
                                 <option value="cancelada">❌ Canceladas</option>
                                 <option value="archivada">📦 Archivadas</option>
                             </select>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('filter-citas-status').value='archivada'; ADMIN_APP.filterAppointments();">
+                            <button type="button" id="btn-toggle-archived" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.toggleArchivedView()">
                                 📦 Ver Archivadas
                             </button>
                         </div>

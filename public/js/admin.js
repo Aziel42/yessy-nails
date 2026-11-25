@@ -674,9 +674,23 @@ const ADMIN_APP = {
         document.getElementById('stat-revenue-citas').textContent = `$${totalRevenue.toFixed(2)}`;
     },
 
+    toggleArchivedView() {
+        const select = document.getElementById('filter-citas-status');
+        if (!select) return;
+        select.value = select.value === 'archivada' ? 'todas' : 'archivada';
+        this.filterAppointments();
+    },
+
     filterAppointments() {
         const statusFilter = document.getElementById('filter-citas-status').value;
         const searchInput = document.getElementById('filter-citas-search').value.toLowerCase().trim();
+        const toggleBtn = document.getElementById('btn-toggle-archived');
+
+        if (toggleBtn) {
+            toggleBtn.textContent = statusFilter === 'archivada'
+                ? '📋 Ver Citas Actuales'
+                : '📦 Ver Archivadas';
+        }
 
         let filtered = this.allAppointments;
 
