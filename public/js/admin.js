@@ -8,7 +8,7 @@
 const ADMIN_APP = {
     token: null,
     user: null,
-    activeTab: 'config',
+    activeTab: 'citas',
     activeChatRoomId: null,
     chatPollingInterval: null,
     allServices: [],
@@ -102,7 +102,7 @@ const ADMIN_APP = {
         }
 
         // Cargar pestaña inicial
-        this.switchTab('config');
+        this.switchTab('citas');
         this.startBackgroundChatPolling();
     },
 
@@ -154,6 +154,12 @@ const ADMIN_APP = {
         const adminChatForm = document.getElementById('admin-chat-send-form');
         if (adminChatForm) {
             adminChatForm.addEventListener('submit', (e) => this.handleSendAdminChatMessage(e));
+        }
+
+        // Formulario de Preguntas Frecuentes (FAQs)
+        const faqForm = document.getElementById('admin-faq-form');
+        if (faqForm) {
+            faqForm.addEventListener('submit', (e) => this.handleCreateFaq(e));
         }
     },
 
@@ -216,15 +222,20 @@ const ADMIN_APP = {
         });
 
         // Cargar datos según la pestaña activa
-        if (tabId === 'config') this.loadConfig();
+        if (tabId === 'citas') this.loadAppointments();
         if (tabId === 'servicios-portafolio') {
             this.loadServices();
             this.loadPortfolio();
         }
-        if (tabId === 'citas')    this.loadAppointments();
-        if (tabId === 'pedidos')  this.loadPedidos();
-        if (tabId === 'ofertas')  this.loadOfertasTab();
-        if (tabId === 'chat')     this.loadChatRooms();
+        if (tabId === 'pedidos-chat') {
+            this.loadPedidos();
+            this.loadChatRooms();
+        }
+        if (tabId === 'faqs-config') {
+            this.loadFaqs();
+            this.loadConfig();
+            this.loadOfertasTab();
+        }
     },
 
     // ── 2. PESTAÑA: PERSONALIZAR SITIO & BANNER ──────────────────
@@ -1238,8 +1249,8 @@ const ADMIN_APP = {
                         }
                     }).catch(() => {});
 
-                // Si está en la pestaña de chat, actualizar salas y mensajes
-                if (this.activeTab === 'chat') {
+                // Si está en la pestaña de pedidos y chat, actualizar salas y mensajes
+                if (this.activeTab === 'pedidos-chat') {
                     this.loadChatRooms();
                     if (this.activeChatRoomId) {
                         this.loadActiveRoomMessages();
@@ -1312,6 +1323,101 @@ const ADMIN_APP = {
         }
         el.innerHTML = message;
         setTimeout(() => { el.style.display = 'none'; }, 5000);
+    },
+
+    // ── GESTIÓN DE PREGUNTAS FRECUENTES (FAQs) ──────────────────
+    async loadFaqs() {
+        const tbody = document.getElementById('faqs-table-body');
+        if (!tbody) return;
+
+        try {
+            const res = await fetch('/api/faqs');
+            const json = await res.json();
+            const faqs = json.data || [];
+
+            if (faqs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--color-text-muted);">No hay preguntas frecuentes registradas.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = faqs.map(faq => `
+                <tr>
+                    <td><strong>${Number(faq.orden) || 0}</strong></td>
+                    <td><strong>${this.escapeHTML(faq.pregunta)}</strong></td>
+                    <td style="max-width: 420px;">${this.escapeHTML(faq.respuesta)}</td>
+                    <td>
+                        ${faq.id
+                            ? `<button type="button" class="btn btn-secondary btn-sm" style="color: #C62828; border-color: #FFCDD2;" onclick="ADMIN_APP.deleteFaq(${Number(faq.id)})">🗑️ Eliminar</button>`
+                            : '<span style="font-size: 0.8rem; color: var(--color-text-muted);">Respaldo</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #C62828;">Error al cargar preguntas frecuentes.</td></tr>';
+        }
+    },
+
+    async handleCreateFaq(e) {
+        e.preventDefault();
+        const form = e.target;
+        const alertEl = document.getElementById('faqs-alert');
+        const btn = document.getElementById('btn-save-faq');
+
+        const pregunta = form.pregunta.value.trim();
+        const respuesta = form.respuesta.value.trim();
+        const orden = parseInt(form.orden.value, 10) || 0;
+
+        if (!pregunta || !respuesta) {
+            this.showAlert(alertEl, 'Por favor completa la pregunta y la respuesta.', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+
+        try {
+            const res = await fetch('/api/faqs', {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ pregunta, respuesta, orden, activa: true })
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                this.showAlert(alertEl, '✅ Pregunta frecuente agregada correctamente.', 'success');
+                form.reset();
+                await this.loadFaqs();
+            } else {
+                this.showAlert(alertEl, json.message || 'No se pudo crear la pregunta frecuente.', 'error');
+            }
+        } catch (error) {
+            this.showAlert(alertEl, 'Error de conexión al guardar la pregunta frecuente.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '+ Agregar Pregunta Frecuente ✨';
+        }
+    },
+
+    async deleteFaq(id) {
+        if (!confirm('¿Estás segura de eliminar esta pregunta frecuente?')) return;
+        const alertEl = document.getElementById('faqs-alert');
+
+        try {
+            const res = await fetch(`/api/faqs/${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders()
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                this.showAlert(alertEl, '🗑️ Pregunta frecuente eliminada.', 'success');
+                await this.loadFaqs();
+            } else {
+                this.showAlert(alertEl, json.message || 'No se pudo eliminar la pregunta frecuente.', 'error');
+            }
+        } catch (error) {
+            this.showAlert(alertEl, 'Error de conexión al eliminar la pregunta frecuente.', 'error');
+        }
     },
 
     escapeHTML(str) {

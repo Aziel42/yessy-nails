@@ -82,38 +82,390 @@
 
         <div class="container" style="padding-top: 1.5rem;">
             
-            <!-- Barra de Pestañas de Navegación del Panel -->
+            <!-- Barra de Pestañas de Navegación del Panel (4 Pestañas) -->
             <nav class="admin-nav-tabs" role="tablist">
-                <button type="button" class="admin-tab-btn active" data-tab="config">
-                    <span>⚙️</span> Personalizar Sitio y Banner
+                <button type="button" class="admin-tab-btn active" data-tab="citas">
+                    <span>📅</span> 1. Citas
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="servicios-portafolio">
-                    <span>💅</span> Servicios y Portafolio
+                    <span>💅</span> 2. Servicios y Portafolio
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="citas">
-                    <span>📅</span> Agenda de Citas
-                </button>
-                <button type="button" class="admin-tab-btn" data-tab="pedidos">
-                    <span>🛍️</span> Pedidos
+                <button type="button" class="admin-tab-btn" data-tab="pedidos-chat">
+                    <span>🛍️</span> 3. Pedidos y Chat en Vivo
                     <span class="admin-tab-badge" id="admin-pedidos-tab-badge" style="display: none;">0</span>
+                    <span class="admin-tab-badge admin-tab-badge-chat" id="admin-chat-tab-badge" style="display: none;">0</span>
                 </button>
-                <button type="button" class="admin-tab-btn" data-tab="ofertas">
-                    <span>✉️</span> Enviar Oferta
-                </button>
-                <button type="button" class="admin-tab-btn" data-tab="chat">
-                    <span>💬</span> Bandeja de Chat
-                    <span class="admin-tab-badge" id="admin-chat-tab-badge" style="display: none;">0</span>
+                <button type="button" class="admin-tab-btn" data-tab="faqs-config">
+                    <span>⚙️</span> 4. FAQs y Configuración del Estudio
                 </button>
             </nav>
 
             <!-- ========================================================
-                 PESTAÑA 1: PERSONALIZAR SITIO Y BANNER (PUT /api/config)
+                 PESTAÑA 1: AGENDA DE CITAS
                  ======================================================== -->
-            <section class="admin-tab-panel active" id="tab-panel-config">
+            <section class="admin-tab-panel active" id="tab-panel-citas">
+                
+                <!-- Estadísticas Rápidas -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <small>Total de Citas Registradas</small>
+                        <div class="stat-val" id="stat-total-citas">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Citas Pendientes de Confirmar</small>
+                        <div class="stat-val" id="stat-pending-citas" style="color: #F57F17;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Citas Confirmadas</small>
+                        <div class="stat-val" id="stat-confirmed-citas" style="color: #2E7D32;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Ingresos Totales Estimados</small>
+                        <div class="stat-val" id="stat-revenue-citas">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Interruptor Auto-cancelación -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h4 style="margin: 0 0 0.25rem;">⚡ Auto-cancelación de Citas Sin Anticipo</h4>
+                            <p style="margin: 0; font-size: 0.88rem; color: var(--color-text-muted);">
+                                Cuando está <strong>ON</strong>: las citas pendientes sin folio de anticipo que superen el límite de horas se cancelan automáticamente y se notifica a la clienta por correo.<br>
+                                Cuando está <strong>OFF</strong>: permanecen pendientes para que las gestiones tú manualmente.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                <span style="font-size: 0.88rem; color: var(--color-text-muted);">Límite de horas:</span>
+                                <input type="number" id="cfg-horas-limite" min="1" max="168" value="24"
+                                       style="width: 70px; padding: 0.35rem 0.5rem; border: 1.5px solid var(--color-border); border-radius: 8px; font-size: 0.9rem;"
+                                       onchange="ADMIN_APP.saveAutoCancelConfig()">
+                            </div>
+                            <!-- Toggle ON/OFF -->
+                            <label class="auto-cancel-toggle" title="Activar/Desactivar auto-cancelación">
+                                <input type="checkbox" id="toggle-auto-cancel" onchange="ADMIN_APP.saveAutoCancelConfig()">
+                                <span class="toggle-track">
+                                    <span class="toggle-thumb"></span>
+                                </span>
+                                <span id="toggle-auto-cancel-label" style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-muted);">OFF</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="auto-cancel-alert" style="display:none; margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem;"></div>
+                    <div style="margin-top: 1rem;">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.verifyPendingAppointments()">
+                            🔍 Verificar Citas Pendientes Ahora
+                        </button>
+                        <div id="verify-result" style="display:none; margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 1rem; border-radius: var(--radius-md);"></div>
+                    </div>
+                </div>
+
                 <div class="admin-card">
                     <div class="admin-card-header">
                         <div>
-                            <h3>Personalizar Sitio Web & Hero Banner</h3>
+                            <h3>Control de Citas Registradas</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Gestiona estados de cita y pago con actualización instantánea.</p>
+                        </div>
+                        <!-- Filtros -->
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <input type="text" id="filter-citas-search" class="form-control" placeholder="Buscar por cliente o teléfono..." style="width: 240px; padding: 0.45rem 0.85rem;" oninput="ADMIN_APP.filterAppointments()">
+                            <select id="filter-citas-status" class="form-control" style="width: 190px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterAppointments()">
+                                <option value="todas">📋 Citas Activas</option>
+                                <option value="pendiente">⏳ Pendientes</option>
+                                <option value="confirmada">✅ Confirmadas</option>
+                                <option value="completada">🎉 Completadas</option>
+                                <option value="cancelada">❌ Canceladas</option>
+                                <option value="archivada">📦 Archivadas</option>
+                            </select>
+                            <button type="button" id="btn-toggle-archived" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.toggleArchivedView()">
+                                📦 Ver Archivadas
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Clienta & WhatsApp</th>
+                                    <th>Servicio & Notas</th>
+                                    <th>Fecha & Hora</th>
+                                    <th>Total Est.</th>
+                                    <th>Estado Cita</th>
+                                    <th>Estado Pago</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointments-table-body">
+                                <tr><td colspan="8" style="text-align: center;">Cargando agenda...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 2: SERVICIOS Y PORTAFOLIO (CRUD)
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-servicios-portafolio">
+                
+                <!-- Sección 1: Gestión de Servicios -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Catálogo de Servicios & Costos</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Agrega, actualiza precios o desactiva servicios del menú.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="ADMIN_APP.openCreateServiceModal()">
+                            + Nuevo Servicio ✨
+                        </button>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Servicio & Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Precio Base</th>
+                                    <th>Duración</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="services-table-body">
+                                <tr><td colspan="6" style="text-align: center;">Cargando servicios...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Gestión de Portafolio -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Galería de Portafolio de Diseños</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Sube nuevos sets de uñas para mostrarlos a tus clientas.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="ADMIN_APP.openCreatePortfolioModal()">
+                            + Nuevo Trabajo 📷
+                        </button>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Título del Set</th>
+                                    <th>Estilo</th>
+                                    <th>Descripción</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolio-table-body">
+                                <tr><td colspan="5" style="text-align: center;">Cargando portafolio...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 3: PEDIDOS Y CHAT EN VIVO
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-pedidos-chat">
+
+                <!-- Estadísticas rápidas de pedidos -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <small>Total de Pedidos</small>
+                        <div class="stat-val" id="stat-total-pedidos">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Pendientes</small>
+                        <div class="stat-val" id="stat-pending-pedidos" style="color: #F57F17;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Confirmados</small>
+                        <div class="stat-val" id="stat-confirmed-pedidos" style="color: #2E7D32;">0</div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <small>Ingresos Totales Estimados</small>
+                        <div class="stat-val" id="stat-revenue-pedidos">$0.00</div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>Control de Pedidos de Materiales</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Gestiona los pedidos de la tienda. Cambia el estado desde el selector.</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <select id="filter-pedidos-status" class="form-control" style="width: 180px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterPedidos()">
+                                <option value="todos">Todos los Pedidos</option>
+                                <option value="pendiente">⏳ Pendientes</option>
+                                <option value="confirmado">✅ Confirmados</option>
+                                <option value="entregado">📦 Entregados</option>
+                                <option value="cancelado">❌ Cancelados</option>
+                            </select>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.loadPedidos()">🔄 Actualizar</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Clienta & Contacto</th>
+                                    <th>Productos</th>
+                                    <th>Entrega</th>
+                                    <th>Total</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pedidos-table-body">
+                                <tr><td colspan="8" style="text-align: center;">Cargando pedidos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bandeja de Chat en Vivo -->
+                <div class="admin-card" style="padding: 1.5rem 2rem; margin-bottom: 1.25rem;">
+                    <div class="admin-card-header" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                        <div>
+                            <h3>💬 Bandeja de Chat en Vivo</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem; margin: 0;">Responde en tiempo real a las clientas conectadas desde la web.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-chat-grid">
+                    
+                    <!-- Columna Izquierda: Lista de Conversaciones Activas -->
+                    <div class="admin-rooms-col">
+                        <div class="admin-rooms-header">
+                            <h4 style="font-size: 1.1rem; margin: 0;">Conversaciones Activas</h4>
+                            <small style="color: var(--color-text-muted);">Mensajes de clientas en tiempo real</small>
+                        </div>
+                        <div class="admin-rooms-list" id="admin-chat-rooms-list">
+                            <div style="padding: 2rem; text-align: center; color: var(--color-text-muted);">Cargando salas de chat...</div>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Ventana Activa de Chat -->
+                    <div class="admin-chat-stream">
+                        <!-- Vista Vacía (Sin Sala Seleccionada) -->
+                        <div id="admin-chat-empty-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 2rem; color: var(--color-text-muted);">
+                            <span style="font-size: 3rem; margin-bottom: 0.5rem;">💬</span>
+                            <h4>Selecciona una conversación</h4>
+                            <p style="font-size: 0.9rem;">Elige una clienta de la lista izquierda para responderle en vivo.</p>
+                        </div>
+
+                        <!-- Vista Activa de Chat -->
+                        <div id="admin-chat-active-panel" style="display: none; flex-direction: column; height: 100%;">
+                            <!-- Cabecera de la Sala -->
+                            <div style="padding: 1rem 1.5rem; background: #FAF7F5; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h4 id="admin-chat-client-title" style="margin: 0; font-size: 1.1rem;">Clienta</h4>
+                                    <span style="font-size: 0.78rem; color: #2E7D32;">● Sala activa</span>
+                                </div>
+
+                                <!-- Botones de Respuesta Rápida -->
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.insertQuickResponse('¡Hola! Claro que sí, con gusto te confirmo la cita en Yessy Nails 💅')">
+                                        Confirmar Cita
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.insertQuickResponse('Para apartar tu fecha requerimos un anticipo del 50% vía transferencia SPEI ✨')">
+                                        Anticipo
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Mensajes -->
+                            <div class="admin-chat-messages-box" id="admin-chat-messages-container"></div>
+
+                            <!-- Formulario de Respuesta -->
+                            <form id="admin-chat-send-form" class="chat-footer-form">
+                                <input type="text" id="admin-chat-input" class="chat-input-control" placeholder="Escribe tu respuesta como Yessica..." autocomplete="off" required>
+                                <button type="submit" class="chat-send-btn" aria-label="Enviar respuesta">
+                                    ➤
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 4: FAQs Y CONFIGURACIÓN DEL ESTUDIO
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-faqs-config">
+                <!-- Gestión de Preguntas Frecuentes (FAQs) -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>❓ Preguntas Frecuentes (FAQs)</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Crea o elimina las preguntas que se muestran en el acordeón de la página principal.</p>
+                        </div>
+                    </div>
+
+                    <div id="faqs-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
+
+                    <form id="admin-faq-form" style="margin-bottom: 2rem;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="faq-pregunta">Pregunta *</label>
+                                <input type="text" id="faq-pregunta" name="pregunta" class="form-control" placeholder="Ej. ¿Cuál es el tiempo de duración de las uñas acrílicas?" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="faq-orden">Orden de aparición</label>
+                                <input type="number" id="faq-orden" name="orden" class="form-control" value="0" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="faq-respuesta">Respuesta *</label>
+                            <textarea id="faq-respuesta" name="respuesta" class="form-control" rows="3" placeholder="Escribe la respuesta clara y amable para tus clientas..." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-save-faq">
+                            + Agregar Pregunta Frecuente ✨
+                        </button>
+                    </form>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 80px;">Orden</th>
+                                    <th>Pregunta</th>
+                                    <th>Respuesta</th>
+                                    <th style="width: 130px;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faqs-table-body">
+                                <tr><td colspan="4" style="text-align: center;">Cargando preguntas frecuentes...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Personalizar Sitio Web & Hero Banner (PUT /api/config) -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>⚙️ Personalizar Sitio Web & Hero Banner</h3>
                             <p style="color: var(--color-text-muted); font-size: 0.92rem;">Modifica textos, teléfonos, horarios y banners en tiempo real sin tocar código.</p>
                         </div>
                     </div>
@@ -221,252 +573,8 @@
                         </button>
                     </form>
                 </div>
-            </section>
 
-            <!-- ========================================================
-                 PESTAÑA 2: SERVICIOS Y PORTAFOLIO (CRUD)
-                 ======================================================== -->
-            <section class="admin-tab-panel" id="tab-panel-servicios-portafolio">
-                
-                <!-- Sección 1: Gestión de Servicios -->
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>Catálogo de Servicios & Costos</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Agrega, actualiza precios o desactiva servicios del menú.</p>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="ADMIN_APP.openCreateServiceModal()">
-                            + Nuevo Servicio ✨
-                        </button>
-                    </div>
-
-                    <div class="admin-table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Servicio & Descripción</th>
-                                    <th>Categoría</th>
-                                    <th>Precio Base</th>
-                                    <th>Duración</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="services-table-body">
-                                <tr><td colspan="6" style="text-align: center;">Cargando servicios...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Sección 2: Gestión de Portafolio -->
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>Galería de Portafolio de Diseños</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Sube nuevos sets de uñas para mostrarlos a tus clientas.</p>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="ADMIN_APP.openCreatePortfolioModal()">
-                            + Nuevo Trabajo 📷
-                        </button>
-                    </div>
-
-                    <div class="admin-table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Foto</th>
-                                    <th>Título del Set</th>
-                                    <th>Estilo</th>
-                                    <th>Descripción</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="portfolio-table-body">
-                                <tr><td colspan="5" style="text-align: center;">Cargando portafolio...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- ========================================================
-                 PESTAÑA 3: AGENDA DE CITAS
-                 ======================================================== -->
-            <section class="admin-tab-panel" id="tab-panel-citas">
-                
-                <!-- Estadísticas Rápidas -->
-                <div class="admin-stats-grid">
-                    <div class="admin-stat-card">
-                        <small>Total de Citas Registradas</small>
-                        <div class="stat-val" id="stat-total-citas">0</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <small>Citas Pendientes de Confirmar</small>
-                        <div class="stat-val" id="stat-pending-citas" style="color: #F57F17;">0</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <small>Citas Confirmadas</small>
-                        <div class="stat-val" id="stat-confirmed-citas" style="color: #2E7D32;">0</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <small>Ingresos Totales Estimados</small>
-                        <div class="stat-val" id="stat-revenue-citas">$0.00</div>
-                    </div>
-                </div>
-
-                <!-- Interruptor Auto-cancelación -->
-                <div class="admin-card" style="margin-bottom: 1.5rem;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <h4 style="margin: 0 0 0.25rem;">⚡ Auto-cancelación de Citas Sin Anticipo</h4>
-                            <p style="margin: 0; font-size: 0.88rem; color: var(--color-text-muted);">
-                                Cuando está <strong>ON</strong>: las citas pendientes sin folio de anticipo que superen el límite de horas se cancelan automáticamente y se notifica a la clienta por correo.<br>
-                                Cuando está <strong>OFF</strong>: permanecen pendientes para que las gestiones tú manualmente.
-                            </p>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 0.6rem;">
-                                <span style="font-size: 0.88rem; color: var(--color-text-muted);">Límite de horas:</span>
-                                <input type="number" id="cfg-horas-limite" min="1" max="168" value="24"
-                                       style="width: 70px; padding: 0.35rem 0.5rem; border: 1.5px solid var(--color-border); border-radius: 8px; font-size: 0.9rem;"
-                                       onchange="ADMIN_APP.saveAutoCancelConfig()">
-                            </div>
-                            <!-- Toggle ON/OFF -->
-                            <label class="auto-cancel-toggle" title="Activar/Desactivar auto-cancelación">
-                                <input type="checkbox" id="toggle-auto-cancel" onchange="ADMIN_APP.saveAutoCancelConfig()">
-                                <span class="toggle-track">
-                                    <span class="toggle-thumb"></span>
-                                </span>
-                                <span id="toggle-auto-cancel-label" style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-muted);">OFF</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div id="auto-cancel-alert" style="display:none; margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem;"></div>
-                    <div style="margin-top: 1rem;">
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.verifyPendingAppointments()">
-                            🔍 Verificar Citas Pendientes Ahora
-                        </button>
-                        <div id="verify-result" style="display:none; margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 1rem; border-radius: var(--radius-md);"></div>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>Control de Citas Registradas</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Gestiona estados de cita y pago con actualización instantánea.</p>
-                        </div>
-                        <!-- Filtros -->
-                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                            <input type="text" id="filter-citas-search" class="form-control" placeholder="Buscar por cliente o teléfono..." style="width: 240px; padding: 0.45rem 0.85rem;" oninput="ADMIN_APP.filterAppointments()">
-                            <select id="filter-citas-status" class="form-control" style="width: 190px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterAppointments()">
-                                <option value="todas">📋 Citas Activas</option>
-                                <option value="pendiente">⏳ Pendientes</option>
-                                <option value="confirmada">✅ Confirmadas</option>
-                                <option value="completada">🎉 Completadas</option>
-                                <option value="cancelada">❌ Canceladas</option>
-                                <option value="archivada">📦 Archivadas</option>
-                            </select>
-                            <button type="button" id="btn-toggle-archived" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.toggleArchivedView()">
-                                📦 Ver Archivadas
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="admin-table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Folio</th>
-                                    <th>Clienta & WhatsApp</th>
-                                    <th>Servicio & Notas</th>
-                                    <th>Fecha & Hora</th>
-                                    <th>Total Est.</th>
-                                    <th>Estado Cita</th>
-                                    <th>Estado Pago</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="appointments-table-body">
-                                <tr><td colspan="8" style="text-align: center;">Cargando agenda...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- ========================================================
-                 PESTAÑA 4: PEDIDOS
-                 ======================================================== -->
-            <section class="admin-tab-panel" id="tab-panel-pedidos">
-
-                <!-- Estadísticas rápidas de pedidos -->
-                <div class="admin-stats-grid">
-                    <div class="admin-stat-card">
-                        <small>Total de Pedidos</small>
-                        <div class="stat-val" id="stat-total-pedidos">0</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <small>Pendientes</small>
-                        <div class="stat-val" id="stat-pending-pedidos" style="color: #F57F17;">0</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <small>Confirmados</small>
-                        <div class="stat-val" id="stat-confirmed-pedidos" style="color: #2E7D32;">0</div>
-                    </div>
-                    <div class="admin-stat-card">
-                        <small>Ingresos Totales Estimados</small>
-                        <div class="stat-val" id="stat-revenue-pedidos">$0.00</div>
-                    </div>
-                </div>
-
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>Control de Pedidos de Materiales</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Gestiona los pedidos de la tienda. Cambia el estado desde el selector.</p>
-                        </div>
-                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                            <select id="filter-pedidos-status" class="form-control" style="width: 180px; padding: 0.45rem 0.85rem;" onchange="ADMIN_APP.filterPedidos()">
-                                <option value="todos">Todos los Pedidos</option>
-                                <option value="pendiente">⏳ Pendientes</option>
-                                <option value="confirmado">✅ Confirmados</option>
-                                <option value="entregado">📦 Entregados</option>
-                                <option value="cancelado">❌ Cancelados</option>
-                            </select>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.loadPedidos()">🔄 Actualizar</button>
-                        </div>
-                    </div>
-
-                    <div class="admin-table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Folio</th>
-                                    <th>Clienta & Contacto</th>
-                                    <th>Productos</th>
-                                    <th>Entrega</th>
-                                    <th>Total</th>
-                                    <th>Fecha</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pedidos-table-body">
-                                <tr><td colspan="8" style="text-align: center;">Cargando pedidos...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ========================================================
-                 PESTAÑA 5: ENVIAR OFERTA POR CORREO
-                 ======================================================== -->
-            <section class="admin-tab-panel" id="tab-panel-ofertas">
+                <!-- Enviar Oferta por Correo -->
                 <div class="admin-card">
                     <div class="admin-card-header">
                         <div>
@@ -526,68 +634,6 @@
                             </span>
                         </div>
                     </form>
-                </div>
-            </section>
-
-            <!-- ========================================================
-                 PESTAÑA 6: BANDEJA DE CHAT
-                 ======================================================== -->
-            <section class="admin-tab-panel" id="tab-panel-chat">
-                <div class="admin-chat-grid">
-                    
-                    <!-- Columna Izquierda: Lista de Conversaciones Activas -->
-                    <div class="admin-rooms-col">
-                        <div class="admin-rooms-header">
-                            <h4 style="font-size: 1.1rem; margin: 0;">Conversaciones Activas</h4>
-                            <small style="color: var(--color-text-muted);">Mensajes de clientas en tiempo real</small>
-                        </div>
-                        <div class="admin-rooms-list" id="admin-chat-rooms-list">
-                            <div style="padding: 2rem; text-align: center; color: var(--color-text-muted);">Cargando salas de chat...</div>
-                        </div>
-                    </div>
-
-                    <!-- Columna Derecha: Ventana Activa de Chat -->
-                    <div class="admin-chat-stream">
-                        <!-- Vista Vacía (Sin Sala Seleccionada) -->
-                        <div id="admin-chat-empty-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 2rem; color: var(--color-text-muted);">
-                            <span style="font-size: 3rem; margin-bottom: 0.5rem;">💬</span>
-                            <h4>Selecciona una conversación</h4>
-                            <p style="font-size: 0.9rem;">Elige una clienta de la lista izquierda para responderle en vivo.</p>
-                        </div>
-
-                        <!-- Vista Activa de Chat -->
-                        <div id="admin-chat-active-panel" style="display: none; flex-direction: column; height: 100%;">
-                            <!-- Cabecera de la Sala -->
-                            <div style="padding: 1rem 1.5rem; background: #FAF7F5; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <h4 id="admin-chat-client-title" style="margin: 0; font-size: 1.1rem;">Clienta</h4>
-                                    <span style="font-size: 0.78rem; color: #2E7D32;">● Sala activa</span>
-                                </div>
-
-                                <!-- Botones de Respuesta Rápida -->
-                                <div style="display: flex; gap: 0.4rem;">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.insertQuickResponse('¡Hola! Claro que sí, con gusto te confirmo la cita en Yessy Nails 💅')">
-                                        Confirmar Cita
-                                    </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.insertQuickResponse('Para apartar tu fecha requerimos un anticipo del 50% vía transferencia SPEI ✨')">
-                                        Anticipo
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Mensajes -->
-                            <div class="admin-chat-messages-box" id="admin-chat-messages-container"></div>
-
-                            <!-- Formulario de Respuesta -->
-                            <form id="admin-chat-send-form" class="chat-footer-form">
-                                <input type="text" id="admin-chat-input" class="chat-input-control" placeholder="Escribe tu respuesta como Yessica..." autocomplete="off" required>
-                                <button type="submit" class="chat-send-btn" aria-label="Enviar respuesta">
-                                    ➤
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
                 </div>
             </section>
 

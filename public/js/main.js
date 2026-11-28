@@ -8,9 +8,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initScrollHeader();
+    initSoundToggle();
+    initAuthNav();
+    initScrollReveal();
     loadSiteConfig();
     loadFeaturedServices();
     loadRecentPortfolio();
+    loadFaqs();
     initLocationMap();
 });
 
@@ -316,4 +320,144 @@ function escapeHTML(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/* ----------------------------------------------------------------
+   8. BOTÓN DE SILENCIAR / ACTIVAR SONIDOS
+   ---------------------------------------------------------------- */
+function initSoundToggle() {
+    const headerCta = document.querySelector('.header-cta');
+    let btn = document.getElementById('sound-toggle');
+
+    if (!btn && headerCta) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id = 'sound-toggle';
+        btn.className = 'sound-toggle-btn';
+        headerCta.prepend(btn);
+    }
+    if (!btn) return;
+
+    const syncIcon = () => {
+        const enabled = window.YESSY_SOUNDS ? window.YESSY_SOUNDS.isEnabled() : true;
+        btn.textContent = enabled ? '🔊' : '🔇';
+        btn.setAttribute('aria-label', enabled ? 'Silenciar sonidos' : 'Activar sonidos');
+        btn.title = enabled ? 'Silenciar sonidos' : 'Activar sonidos';
+    };
+
+    syncIcon();
+
+    if (!btn.dataset.soundBound) {
+        btn.dataset.soundBound = '1';
+        btn.addEventListener('click', () => {
+            if (window.YESSY_SOUNDS && typeof window.YESSY_SOUNDS.toggle === 'function') {
+                window.YESSY_SOUNDS.toggle();
+            }
+        });
+    }
+}
+
+/* ----------------------------------------------------------------
+   9. ESTADO DE SESIÓN EN BARRA DE NAVEGACIÓN
+   ---------------------------------------------------------------- */
+function initAuthNav() {
+    const headerCta = document.querySelector('.header-cta');
+    let container = document.getElementById('auth-nav-container');
+
+    if (!container && headerCta) {
+        container = document.createElement('span');
+        container.id = 'auth-nav-container';
+        container.className = 'auth-nav-container';
+        const ctaLink = headerCta.querySelector('a.btn-primary');
+        if (ctaLink) {
+            headerCta.insertBefore(container, ctaLink);
+        } else {
+            headerCta.appendChild(container);
+        }
+    }
+    if (!container) return;
+
+    const session = window.YESSY_AUTH ? window.YESSY_AUTH.getSession() : null;
+    if (session && session.user && session.user.email) {
+        const email = session.user.email;
+        container.innerHTML = `
+            <span class="auth-user-email" title="${escapeHTML(email)}">👤 ${escapeHTML(email)}</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-nav-logout">Cerrar Sesión</button>
+        `;
+        const logoutBtn = document.getElementById('btn-nav-logout');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (window.YESSY_AUTH) window.YESSY_AUTH.logout();
+            });
+        }
+    } else {
+        container.innerHTML = `<a href="login.html" class="btn btn-secondary btn-sm" id="btn-nav-login">Iniciar Sesión / Registrarse</a>`;
+    }
+}
+
+/* ----------------------------------------------------------------
+   10. ANIMACIONES SUAVES AL HACER SCROLL (.reveal)
+   ---------------------------------------------------------------- */
+function initScrollReveal() {
+    const elements = document.querySelectorAll('.reveal');
+    if (!elements.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+        elements.forEach(el => el.classList.add('active'));
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.12 });
+
+    elements.forEach(el => observer.observe(el));
+}
+
+/* ----------------------------------------------------------------
+   11. ACORDEÓN DE PREGUNTAS FRECUENTES (GET /api/faqs)
+   ---------------------------------------------------------------- */
+async function loadFaqs() {
+    const container = document.getElementById('faq-accordion-container');
+    if (!container) return;
+
+    try {
+        const res = await fetch('/api/faqs');
+        if (!res.ok) throw new Error('Error al cargar preguntas frecuentes');
+        const json = await res.json();
+        const faqs = json.data || [];
+
+        if (!faqs.length) {
+            container.innerHTML = '<p class="faq-loading">Por el momento no hay preguntas frecuentes publicadas.</p>';
+            return;
+        }
+
+        container.innerHTML = faqs.map((faq, idx) => `
+            <div class="faq-item" data-faq-index="${idx}">
+                <button type="button" class="faq-question" aria-expanded="false">
+                    <span>${escapeHTML(faq.pregunta)}</span>
+                    <span class="faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="faq-answer">
+                    <div class="faq-answer-inner">${escapeHTML(faq.respuesta)}</div>
+                </div>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.faq-question').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.closest('.faq-item');
+                const isOpen = item.classList.toggle('open');
+                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        });
+    } catch (error) {
+        console.warn('ℹ️ No se pudieron cargar las FAQs:', error.message);
+        container.innerHTML = '<p class="faq-loading">No se pudieron cargar las preguntas frecuentes en este momento.</p>';
+    }
 }

@@ -18,7 +18,15 @@ export async function getConfig(req, res) {
             return errorResponse(res, 'Configuración no encontrada.', 404);
         }
 
-        return successResponse(res, config, 'Configuración del sitio obtenida.');
+        // Exponer datos públicos de Supabase necesarios para el cliente de Auth
+        const publicConfig = {
+            ...config,
+            supabase_url: process.env.SUPABASE_URL || '',
+            supabase_anon_key:
+                process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || ''
+        };
+
+        return successResponse(res, publicConfig, 'Configuración del sitio obtenida.');
     } catch (error) {
         return errorResponse(res, 'Error al obtener la configuración.', 500, error.message);
     }

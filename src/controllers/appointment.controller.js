@@ -151,6 +151,12 @@ export async function create(req, res) {
             return errorResponse(res, 'Campos obligatorios: nombre_cliente, telefono_cliente, servicio_id, fecha_cita, hora_cita.', 400);
         }
 
+        // Límite de 2 citas activas por usuario (email o teléfono)
+        const activeCount = await AppointmentModel.countActiveAppointments(correo_cliente, telefono_cliente);
+        if (activeCount >= 2) {
+            return errorResponse(res, 'Has alcanzado el límite de 2 citas activas simultáneas. Completa o cancela una antes de agendar otra.', 429);
+        }
+
         // Validar correo si se proporcionó
         if (correo_cliente && !isValidEmail(correo_cliente)) {
             return errorResponse(res, 'El correo electrónico no tiene un formato válido.', 400);

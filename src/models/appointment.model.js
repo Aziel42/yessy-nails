@@ -142,6 +142,30 @@ export async function checkAvailability(fecha, hora, excludeId = null) {
 }
 
 /**
+ * Cuenta citas activas (pendiente/confirmada) de un mismo correo o teléfono.
+ * @param {string|null} email
+ * @param {string|null} phone
+ */
+export async function countActiveAppointments(email = null, phone = null) {
+    const conditions = [];
+    if (email) conditions.push(`correo_cliente.eq.${encodeURIComponent(email)}`);
+    if (phone) conditions.push(`telefono_cliente.eq.${encodeURIComponent(phone)}`);
+
+    let query = supabaseAdmin
+        .from(TABLE)
+        .select('id', { count: 'exact', head: true })
+        .in('estado_cita', ['pendiente', 'confirmada']);
+
+    if (conditions.length > 0) {
+        query = query.or(conditions.join(','));
+    }
+
+    const { count, error } = await query;
+    if (error) throw new Error(error.message);
+    return count || 0;
+}
+
+/**
  * Auto-cancelación de citas pendientes sin confirmar anticipo.
  * Cancela las citas en estado 'pendiente' cuya clienta aún no ha enviado
  * folio de anticipo y que superan el límite de horas configurado.

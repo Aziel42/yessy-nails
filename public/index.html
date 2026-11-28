@@ -54,6 +54,10 @@
                 </ul>
 
                 <div class="header-cta">
+                    <button type="button" id="sound-toggle" class="sound-toggle-btn" aria-label="Silenciar sonidos" title="Silenciar sonidos">🔊</button>
+                    <span id="auth-nav-container" class="auth-nav-container">
+                        <a href="login.html" class="btn btn-secondary btn-sm" id="btn-nav-login">Iniciar Sesión / Registrarse</a>
+                    </span>
                     <a href="agendar.html" class="btn btn-primary btn-sm">Agendar Cita ✨</a>
                 </div>
             </nav>
@@ -108,7 +112,7 @@
     <!-- ============================================================
          BLOQUE DE PROMOCIÓN DEL MES (EDITABLE DESDE /admin)
          ============================================================ -->
-    <section class="promo-section" id="promo-section">
+    <section class="promo-section reveal" id="promo-section">
         <div class="container">
             <div class="promo-card">
                 <span class="section-tag">Promoción del Mes</span>
@@ -122,7 +126,7 @@
     <!-- ============================================================
          RESUMEN DE SERVICIOS ESTRELLA
          ============================================================ -->
-    <section class="services-section" id="servicios">
+    <section class="services-section reveal" id="servicios">
         <div class="container">
             <div class="section-header">
                 <span class="section-tag">Nuestras Especialidades</span>
@@ -196,7 +200,7 @@
     <!-- ============================================================
          MUESTRA DEL PORTAFOLIO (3 TRABAJOS RECIENTES)
          ============================================================ -->
-    <section class="portfolio-section" id="portafolio">
+    <section class="portfolio-section reveal" id="portafolio">
         <div class="container">
             <div class="section-header">
                 <span class="section-tag">Galería de Arte</span>
@@ -257,7 +261,7 @@
     <!-- ============================================================
          TARJETA DE PRESENTACIÓN DE YESSICA MARLEN CALDERÓN LUNA
          ============================================================ -->
-    <section class="about-preview-section">
+    <section class="about-preview-section reveal">
         <div class="container">
             <div class="about-card-container">
                 <!-- Foto -->
@@ -311,7 +315,7 @@
     <!-- ============================================================
          BLOQUE DE UBICACIÓN RÁPIDA & CONTACTO
          ============================================================ -->
-    <section class="location-section" id="ubicacion">
+    <section class="location-section reveal" id="ubicacion">
         <div class="container">
             <div class="section-header">
                 <span class="section-tag">Visítanos</span>
@@ -381,9 +385,27 @@
     </section>
 
     <!-- ============================================================
+         PREGUNTAS FRECUENTES (ACORDEÓN DINÁMICO GET /api/faqs)
+         ============================================================ -->
+    <section class="faq-section reveal" id="faqs">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Resolvemos tus dudas</span>
+                <h2>Preguntas Frecuentes</h2>
+                <p>Encuentra respuestas rápidas sobre citas, anticipos, formas de pago y cuidados de tus uñas.</p>
+                <div class="gold-divider"></div>
+            </div>
+
+            <div class="faq-accordion" id="faq-accordion-container">
+                <p class="faq-loading">Cargando preguntas frecuentes...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
          BANNER CTA GLOBAL
          ============================================================ -->
-    <section class="cta-banner-section">
+    <section class="cta-banner-section reveal">
         <div class="container">
             <div class="cta-banner-content">
                 <h2>¿Lista para lucir unas uñas espectaculares?</h2>
@@ -464,7 +486,7 @@
     <!-- ============================================================
          REGISTRO LIGERO: "RECIBE NUESTRAS PROMOCIONES DEL MES"
          ============================================================ -->
-    <section class="promo-subscribe-section" id="suscribirse" style="
+    <section class="promo-subscribe-section reveal" id="suscribirse" style="
         background: linear-gradient(135deg, #FBF0F3 0%, #FDF7EF 100%);
         padding: 3rem 0;
         border-top: 1px solid #F3D9E0;">
@@ -499,6 +521,8 @@
     </section>
 
     <!-- Scripts -->
+    <script src="js/sounds.js"></script>
+    <script src="js/client-auth.js"></script>
     <script src="js/main.js"></script>
     <script src="js/chat.js"></script>
     <script>

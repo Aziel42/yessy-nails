@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Inscripción y inicio de sesión en Yessy Nails — Salón de uñas de Yessica Marlen Calderón Luna.">
+    <title>Iniciar Sesión / Registrarse — Yessy Nails</title>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Iniciar Sesión / Registrar — Yessy Nails">
+    <meta property="og:description" content="Registrarse con email y contraseña o conectar con Google para acceder a la agenda.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yessyNails.com/login.html">
+    <meta property="og:image" content="https://yessyNails.com/img/yessica.jpg">
+    <meta property="og:locale" content="es_MX">
+    <meta property="og:site_name" content="Yessy Nails">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Supabase Client (publico) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <!-- Autenticación local del cliente -->
+    <script src="js/client-auth.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="brand-logo" aria-label="Inicio Yessy Nails">
+                <span class="brand-icon">💅</span>
+                Yessy <span>Nails</span>
+            </a>
+
+            <!-- Navegación -->
+            <nav class="main-nav" aria-label="Navegación principal">
+                <ul class="nav-links">
+                    <li><a href="index.html" class="nav-link active">Inicio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
+                    <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
+                    <li><a href="pedidos.html" class="nav-link">Pedidos</a></li>
+                </ul>
+
+                <div class="header-cta">
+                    <a href="agendar.html" class="btn btn-primary btn-sm">Agendar Cita ✨</a>
+                </div>
+            </nav>
+
+            <!-- Botón Hamburguesa Móvil -->
+            <button class="menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+
+        <!-- ============================================================
+             INSCRIBUCIÓN LIGERA: "RECIBE NUESTRAS PROMOCIONES DEL MES"
+             ============================================================ -->
+        <section class="promo-subscribe-section" id="subscribe-block">
+            <div style="max-width: 540px; margin: 0 auto; text-align: center;">
+                <span class="section-tag">Suscríbete gratis</span>
+                <h2 style="margin: 0.5rem 0 0.75rem; font-size: 1.7rem;">Recibe nuestras promociones del mes 💅</h2>
+                <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 1.75rem;">
+                    Déjanos tu nombre y correo y te avisaremos de ofertas exclusivas antes que nadie. Sin spam, solo lo bueno.
+                </p>
+
+                <div id="subscribe-alert" style="display:none; padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.92rem;"></div>
+
+                <form id="subscribe-form" novalidate style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <input type="text" id="sub-nombre" name="nombre" class="form-control" placeholder="Tu nombre" required style="flex: 1 1 160px; min-width: 160px;">
+                        <input type="email" id="sub-correo" name="correo" class="form-control" placeholder="tu@correo.com" required style="flex: 2 1 200px; min-width: 200px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btn-subscribe" style="width: 100%; font-size: 1rem; padding: 0.9rem;">
+                        ✨ Suscribirme a las Promociones
+                    </button>
+                    <p style="font-size: 0.78rem; color: var(--color-text-muted); margin: 0;">
+                        Puedes darte de baja en cualquier momento escribiéndonos. No compartimos tus datos.
+                    </p>
+                </form>
+            </div>
+        </section>
+
+        <!-- ============================================================
+              FORMULARIO DE INSCRIBUCIÓN / REGISTRO
+              ============================================================ -->
+        <section class="login-form-section">
+            <div class="container">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="login-email">Correo electrónico *</label>
+                        <input type="email" id="login-email" name="email" class="form-control" placeholder="ejemplo@correo.com" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="login-password">Contraseña *</label>
+                        <input type="password" id="login-password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label" for="login-confirm-password">Confirmar contraseña</label>
+                    <input type="password" id="login-confirm-password" name="password_confirm" class="form-control" placeholder="Repetir contraseña" required autocomplete="new-password">
+                </div>
+            </div>
+
+            <div id="login-error-alert" style="display: none; padding: 0.85rem; border-radius: var(--radius-md); background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; margin-bottom: 1.5rem; font-size: 0.9rem;"></div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/sounds.js"></script>
+    <script src="js/client-auth.js"></script>
+</body>
+</html>
