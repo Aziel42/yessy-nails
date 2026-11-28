@@ -12,7 +12,9 @@
   "jest": {
     "testEnvironment": "node",
     "transform": {},
-    "testMatch": ["**/tests/**/*.test.js"]
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
   },
   "keywords": [
     "nail-salon",
@@ -28,7 +30,8 @@
     "cors": "^2.8.5",
     "dotenv": "^18.0.10",
     "express": "^4.21.0",
-    "multer": "^2.5.0"
+    "multer": "^2.5.0",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

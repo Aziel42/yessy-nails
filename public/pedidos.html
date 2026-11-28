@@ -202,10 +202,11 @@
             <nav class="main-nav" aria-label="Navegación principal">
                 <ul class="nav-links">
                     <li><a href="index.html" class="nav-link">Inicio</a></li>
-                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
-                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
                     <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
                     <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li class="nav-divider" aria-hidden="true">|</li>
                     <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
                     <li><a href="pedidos.html" class="nav-link active">Pedidos</a></li>
                 </ul>
@@ -304,6 +305,18 @@
                                 <input type="text" id="order-direccion" class="form-control" style="padding:0.45rem 0.75rem;" placeholder="Calle, colonia, referencias…">
                             </div>
 
+                            <h4>💳 Método de Pago</h4>
+                            <div style="margin-bottom: 1.25rem;">
+                                <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; cursor: pointer; margin-bottom: 0.5rem;">
+                                    <input type="radio" name="order-metodo-pago" value="efectivo" checked>
+                                    <span>💵 Pago contra entrega (Efectivo)</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; cursor: pointer;">
+                                    <input type="radio" name="order-metodo-pago" value="mercadopago">
+                                    <span>💳 Pago en línea (Mercado Pago Sandbox)</span>
+                                </label>
+                            </div>
+
                             <button type="button" id="btn-place-order" class="btn btn-primary" style="width:100%;margin-top:0.5rem;">
                                 Realizar Pedido 🛍️
                             </button>
@@ -312,7 +325,69 @@
                 </div>
             </aside>
         </div>
+
+        <!-- VISTA DE CONFIRMACIÓN DE PEDIDO (Pase Digital con QR) -->
+        <div class="confirmation-card" id="order-confirmation-view" style="display: none; margin-top: 2rem; margin-bottom: 4rem;">
+            <div class="confirmation-icon">🛒</div>
+            <span class="section-tag">Pase de Entrega Yessy Nails</span>
+            <h3>¡Tu Pedido ha sido Registrado!</h3>
+            <p style="color: var(--color-text-muted); font-size: 1rem; max-width: 580px; margin: 0 auto 1.25rem;">
+                Presenta este Pase Digital con código QR al recibir tus productos para validar la entrega.
+            </p>
+
+            <!-- Bloque QR -->
+            <div style="display: inline-flex; flex-direction: column; align-items: center; background: #FFFFFF; border: 2px solid var(--color-border-gold); border-radius: 18px; padding: 1.25rem 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+                <img id="order-conf-qr-img" src="" alt="Código QR Pase Digital" style="width: 190px; height: 190px; object-fit: contain; display: none;">
+                <div style="margin-top: 0.65rem; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.06em; color: var(--color-accent-dark);" id="order-conf-folio-badge">YN-PED-XXXX</div>
+                <span id="order-conf-pago-badge" style="margin-top: 0.4rem; padding: 0.25rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; background: #FFF3E0; color: #E65100;">PAGO PENDIENTE</span>
+            </div>
+
+            <div class="receipt-box" style="text-align: left; max-width: 500px; margin: 0 auto 1.5rem; background: #FDFBF9; border: 1.5px solid var(--color-border); border-radius: 12px; padding: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Folio:</span>
+                    <strong id="order-conf-folio">#0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Cliente:</span>
+                    <strong id="order-conf-nombre">-</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Entrega:</span>
+                    <strong id="order-conf-entrega">-</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; border-top: 1px dashed var(--color-border); padding-top: 0.5rem;">
+                    <span>Total:</span>
+                    <strong id="order-conf-total" style="color: var(--color-accent-dark); font-size: 1.2rem;">$0.00 MXN</strong>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.85rem; max-width: 400px; margin: 0 auto;">
+                <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Imprimir Pase</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.reload();">Seguir Comprando</button>
+            </div>
+        </div>
     </main>
+
+    <!-- MODAL MERCADO PAGO SANDBOX (PEDIDOS) -->
+    <div id="order-mp-sandbox-modal" style="display:none; position:fixed; inset:0; background:rgba(20,16,24,0.65); backdrop-filter:blur(4px); z-index:9100; align-items:center; justify-content:center; padding:1rem;">
+        <div role="dialog" aria-modal="true" style="background:#fff; width:100%; max-width:440px; border-radius:20px; padding:1.75rem; box-shadow:0 24px 60px rgba(0,0,0,0.28); text-align:center;">
+            <span style="display:inline-block; background:#E3F2FD; color:#0D47A1; font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:20px; margin-bottom:0.75rem;">
+                💳 Mercado Pago — Tienda Sandbox
+            </span>
+            <h3 style="margin:0 0 0.4rem; font-family:var(--font-heading);">Confirmar Pago del Pedido</h3>
+            <p style="font-size:0.88rem; color:var(--color-text-muted); margin-bottom:1.15rem;">
+                Simulación de pago seguro.
+            </p>
+            <div style="background:#F7FAFF; border:1.5px solid #BBDEFB; border-radius:12px; padding:1rem; margin-bottom:1.25rem; text-align:left; font-size:0.9rem; line-height:1.7;">
+                <div><span>Pedido:</span> <strong id="order-mp-folio">—</strong></div>
+                <div><span>Total a pagar:</span> <strong id="order-mp-monto" style="color:#0D47A1; font-size:1.05rem;">$0.00 MXN</strong></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                <button type="button" id="btn-order-mp-confirm" class="btn btn-primary" style="width:100%;">✅ Aprobar Pago (Sandbox)</button>
+                <button type="button" id="btn-order-mp-cancel" class="btn btn-secondary btn-sm" style="width:100%;">Pagar contra entrega</button>
+            </div>
+        </div>
+    </div>
 
     <!-- CONFIRMACIÓN DE PEDIDO (oculta) -->
     <div id="order-success-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:none;align-items:center;justify-content:center;">
@@ -588,7 +663,8 @@
                 tipo_entrega: tipoEntrega,
                 direccion_entrega: tipoEntrega === 'punto_medio_domicilio' ? (direccion || null) : null,
                 lat_entrega: tipoEntrega === 'punto_medio_domicilio' ? lat : null,
-                lng_entrega: tipoEntrega === 'punto_medio_domicilio' ? lng : null
+                lng_entrega: tipoEntrega === 'punto_medio_domicilio' ? lng : null,
+                metodo_pago: document.querySelector('input[name="order-metodo-pago"]:checked').value
             };
 
             btn.disabled = true;
@@ -603,28 +679,122 @@
                 });
                 const json = await res.json();
 
-                if (json.success) {
-                    // Mostrar overlay de éxito
-                    const overlay = document.getElementById('order-success-overlay');
-                    document.getElementById('order-success-msg').textContent =
-                        `¡Gracias, ${nombre}! Tu pedido fue registrado. Te contactaremos por WhatsApp para coordinar el pago y la entrega. 💕`;
-                    overlay.style.display = 'flex';
+                if (json.success && json.data) {
+                    const pedido = json.data;
+                    if (payload.metodo_pago === 'mercadopago') {
+                        await handleMercadoPagoOrderFlow(pedido);
+                    } else {
+                        showOrderConfirmation(pedido);
+                    }
                     // Limpiar carrito
                     cart = {};
                     renderCart();
-                    document.getElementById('order-nombre').value    = '';
-                    document.getElementById('order-telefono').value  = '';
-                    document.getElementById('order-correo').value    = '';
-                    document.getElementById('order-direccion').value = '';
                 } else {
                     showAlert(json.message || 'No se pudo registrar el pedido. Inténtalo de nuevo.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Realizar Pedido 🛍️';
                 }
             } catch (err) {
                 showAlert('Error de conexión. Verifica tu internet e inténtalo de nuevo.', 'error');
-            } finally {
                 btn.disabled = false;
                 btn.textContent = 'Realizar Pedido 🛍️';
             }
+        }
+
+        async function handleMercadoPagoOrderFlow(pedido) {
+            try {
+                const prefRes = await fetch('/api/pagos/crear-preferencia', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tipo: 'pedido',
+                        referencia_id: pedido.id,
+                        folio: pedido.folio,
+                        titulo: `Pedido Yessy Nails - ${pedido.folio}`,
+                        monto: pedido.total,
+                        correo_cliente: pedido.correo_cliente,
+                        nombre_cliente: pedido.nombre_cliente
+                    })
+                });
+                const prefJson = await prefRes.json();
+                const pref = prefJson.data || {};
+
+                if (!pref.sandbox_simulado && (pref.sandbox_init_point || pref.init_point)) {
+                    window.open(pref.sandbox_init_point || pref.init_point, '_blank', 'noopener');
+                }
+
+                openOrderMpSandboxModal(pedido);
+            } catch (err) {
+                showOrderConfirmation(pedido);
+            }
+        }
+
+        function openOrderMpSandboxModal(pedido) {
+            const modal = document.getElementById('order-mp-sandbox-modal');
+            if (!modal) {
+                showOrderConfirmation(pedido);
+                return;
+            }
+
+            document.getElementById('order-mp-folio').textContent = pedido.folio || `#${pedido.id}`;
+            document.getElementById('order-mp-monto').textContent = `$${Number(pedido.total).toFixed(2)} MXN`;
+            modal.style.display = 'flex';
+
+            const btnConfirm = document.getElementById('btn-order-mp-confirm');
+            const btnCancel  = document.getElementById('btn-order-mp-cancel');
+
+            btnConfirm.onclick = async () => {
+                btnConfirm.disabled = true;
+                btnConfirm.textContent = '⏳ Confirmando...';
+                try {
+                    const confRes = await fetch('/api/pagos/confirmar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tipo: 'pedido', id: pedido.id, folio: pedido.folio })
+                    });
+                    const confJson = await confRes.json();
+                    const finalPedido = confJson.success && confJson.data ? { ...pedido, ...confJson.data } : { ...pedido, pago_estado: 'pagado' };
+                    modal.style.display = 'none';
+                    showOrderConfirmation(finalPedido);
+                } catch (e) {
+                    modal.style.display = 'none';
+                    showOrderConfirmation(pedido);
+                }
+            };
+
+            btnCancel.onclick = () => {
+                modal.style.display = 'none';
+                showOrderConfirmation(pedido);
+            };
+        }
+
+        function showOrderConfirmation(pedido) {
+            // Ocultar layout de tienda
+            document.querySelector('.store-layout').style.display = 'none';
+            document.querySelector('.store-hero').style.display = 'none';
+            
+            const view = document.getElementById('order-confirmation-view');
+            view.style.display = 'block';
+            view.scrollIntoView({ behavior: 'smooth' });
+
+            const folioDisplay = pedido.folio || `#${pedido.id}`;
+            const isPaid = pedido.pago_estado === 'pagado';
+
+            const qrImg = document.getElementById('order-conf-qr-img');
+            if (qrImg && pedido.codigo_qr) {
+                qrImg.src = pedido.codigo_qr;
+                qrImg.style.display = 'block';
+            }
+            document.getElementById('order-conf-folio-badge').textContent = folioDisplay;
+            const pagoBadge = document.getElementById('order-conf-pago-badge');
+            pagoBadge.textContent = isPaid ? '✅ PAGADO' : '⏳ PAGO PENDIENTE';
+            pagoBadge.style.background = isPaid ? '#E8F5E9' : '#FFF3E0';
+            pagoBadge.style.color = isPaid ? '#2E7D32' : '#E65100';
+
+            document.getElementById('order-conf-folio').textContent = folioDisplay;
+            document.getElementById('order-conf-nombre').textContent = pedido.nombre_cliente;
+            document.getElementById('order-conf-entrega').textContent = pedido.tipo_entrega === 'estudio' ? 'Estudio' : 'Domicilio';
+            document.getElementById('order-conf-total').textContent = `$${Number(pedido.total).toFixed(2)} MXN`;
         }
 
         function closeSuccess() {

@@ -6,7 +6,7 @@
 import { supabaseAdmin } from '../config/supabase.js';
 
 const TABLE = 'portafolio';
-const ALLOWED_FIELDS = ['titulo', 'estilo', 'descripcion', 'imagen_url'];
+const ALLOWED_FIELDS = ['titulo', 'estilo', 'descripcion', 'imagen_url', 'precio'];
 
 function buildPayload(data) {
     const payload = {};
@@ -72,12 +72,25 @@ export async function updatePortfolio(id, data) {
     const payload = buildPayload(data);
     if (Object.keys(payload).length === 0) return null;
 
-    const { data: updated, error } = await supabaseAdmin
+    let { data: updated, error } = await supabaseAdmin
         .from(TABLE)
         .update(payload)
         .eq('id', id)
         .select()
         .maybeSingle();
+
+    if (error && error.message.includes('precio')) {
+        delete payload.precio;
+        if (Object.keys(payload).length === 0) return getPortfolioById(id);
+        const retry = await supabaseAdmin
+            .from(TABLE)
+            .update(payload)
+            .eq('id', id)
+            .select()
+            .maybeSingle();
+        updated = retry.data;
+        error = retry.error;
+    }
 
     if (error) throw new Error(error.message);
     return updated;

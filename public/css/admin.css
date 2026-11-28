@@ -244,6 +244,29 @@
     overflow-x: auto;
 }
 
+.admin-scroll-services {
+    max-height: 390px;
+    overflow-y: auto;
+}
+
+.admin-scroll-portfolio {
+    max-height: 580px;
+    overflow-y: auto;
+}
+
+.admin-scroll-pedidos {
+    max-height: 410px;
+    overflow-y: auto;
+}
+
+.admin-scroll-services thead th,
+.admin-scroll-portfolio thead th,
+.admin-scroll-pedidos thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
 .admin-table {
     width: 100%;
     border-collapse: collapse;
@@ -355,6 +378,7 @@
 
 .admin-rooms-list {
     flex: 1;
+    max-height: 520px;
     overflow-y: auto;
 }
 
@@ -404,6 +428,7 @@
 
 .admin-chat-messages-box {
     flex: 1;
+    max-height: 490px;
     padding: 1.5rem;
     overflow-y: auto;
     background: #FDFBFA;

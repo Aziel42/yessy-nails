@@ -259,10 +259,11 @@
             <nav class="main-nav" aria-label="Navegación principal">
                 <ul class="nav-links">
                     <li><a href="index.html" class="nav-link">Inicio</a></li>
-                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
-                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
                     <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
                     <li><a href="ubicacion.html" class="nav-link">Ubicación</a></li>
+                    <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
+                    <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
+                    <li class="nav-divider" aria-hidden="true">|</li>
                     <li><a href="chat.html" class="nav-link">Chat en Vivo</a></li>
                     <li><a href="pedidos.html" class="nav-link">Pedidos</a></li>
                 </ul>
@@ -515,12 +516,12 @@
                             </div>
                         </label>
 
-                        <!-- 3. Pago con Tarjeta (Modo Prueba) -->
+                        <!-- 3. Pagar Anticipo en Línea (Mercado Pago Sandbox) -->
                         <label class="payment-radio-label" id="label-tarjeta">
-                            <input type="radio" name="metodo_pago" value="pasarela_futura">
+                            <input type="radio" name="metodo_pago" value="mercadopago">
                             <div class="payment-card-box">
-                                <strong>💳 Pago con Tarjeta <span style="font-size:0.75rem;background:#E3F2FD;color:#1565C0;padding:1px 7px;border-radius:20px;margin-left:4px;">MODO PRUEBA</span></strong>
-                                <span>Simula el pago del anticipo de $50 MXN con tarjeta dentro de este formulario.</span>
+                                <strong>💳 Pagar Anticipo en Línea (Mercado Pago) <span style="font-size:0.75rem;background:#E3F2FD;color:#1565C0;padding:1px 7px;border-radius:20px;margin-left:4px;">SANDBOX</span></strong>
+                                <span>Paga tu anticipo de $50 MXN en línea con Mercado Pago y obtén tu Pase QR confirmado al instante.</span>
                             </div>
                         </label>
                     </div>
@@ -559,68 +560,12 @@
                         </div>
                     </div>
 
-                    <!-- Panel dinámico: tarjeta de prueba -->
-                    <div id="panel-tarjeta" style="display:none; margin-top:1.25rem; background:#F3F4FB; border:1.5px solid #9FA8DA; border-radius:var(--radius-md); padding:1.25rem 1.5rem;">
-                        <p style="font-weight:700; margin-bottom:1rem; color:#283593;">💳 Pago con Tarjeta — Modo Prueba ($50 MXN Anticipo)</p>
-
-                        <!-- Visualizador interactivo de tarjeta -->
-                        <div id="card-visual" style="
-                            width: 100%; max-width: 320px; height: 180px; margin: 0 auto 1.25rem;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            border-radius: 16px; padding: 1.25rem 1.5rem; color: white;
-                            font-family: 'Plus Jakarta Sans', sans-serif; position: relative; box-shadow: 0 10px 30px rgba(102,126,234,0.4);">
-                            <div style="font-size:0.72rem; opacity:0.7; letter-spacing:0.1em; text-transform:uppercase;">Yessy Nails · Anticipo</div>
-                            <div id="card-number-display" style="font-size:1.1rem; letter-spacing:0.18em; margin-top:0.6rem; font-weight:600;">•••• •••• •••• ••••</div>
-                            <div style="display:flex; justify-content:space-between; margin-top:0.75rem;">
-                                <div>
-                                    <div style="font-size:0.65rem; opacity:0.7; text-transform:uppercase;">Titular</div>
-                                    <div id="card-name-display" style="font-size:0.85rem; font-weight:600; letter-spacing:0.05em;">NOMBRE TITULAR</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <div style="font-size:0.65rem; opacity:0.7; text-transform:uppercase;">Vence</div>
-                                    <div id="card-exp-display" style="font-size:0.85rem; font-weight:600;">MM/AA</div>
-                                </div>
-                            </div>
-                            <div style="position:absolute; top:1.25rem; right:1.5rem; font-size:1.5rem; opacity:0.6;">💳</div>
-                        </div>
-
-                        <!-- Campos de tarjeta -->
-                        <div class="form-group">
-                            <label class="form-label">Número de Tarjeta *</label>
-                            <input type="text" id="card-number" class="form-control" maxlength="19"
-                                   placeholder="1234 5678 9012 3456" inputmode="numeric"
-                                   oninput="formatCardNumber(this); updateCardVisual()">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Nombre del Titular *</label>
-                                <input type="text" id="card-name" class="form-control"
-                                       placeholder="Como aparece en la tarjeta"
-                                       oninput="updateCardVisual()">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Vencimiento *</label>
-                                <input type="text" id="card-exp" class="form-control" maxlength="5"
-                                       placeholder="MM/AA" inputmode="numeric"
-                                       oninput="formatCardExp(this); updateCardVisual()">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">CVV (3 dígitos) *</label>
-                            <input type="text" id="card-cvv" class="form-control" maxlength="3"
-                                   placeholder="123" inputmode="numeric" style="max-width:120px;">
-                        </div>
-
-                        <div id="card-auth-result" style="display:none; padding:0.85rem 1rem; border-radius:var(--radius-md); font-size:0.9rem; margin-top:0.75rem;"></div>
-
-                        <button type="button" id="btn-authorize-card" class="btn btn-primary"
-                                style="width:100%; margin-top:0.75rem;"
-                                onclick="simulateCardAuth()">
-                            🔒 Autorizar Anticipo de $50 MXN (Prueba)
-                        </button>
-                        <small style="display:block; text-align:center; color:var(--color-text-muted); font-size:0.78rem; margin-top:0.5rem;">
-                            Modo simulado. No se realiza ningún cargo real. Integración real con pasarela próximamente.
-                        </small>
+                    <!-- Panel dinámico: Mercado Pago Sandbox -->
+                    <div id="panel-tarjeta" style="display:none; margin-top:1.25rem; background:#EEF6FF; border:1.5px solid #90CAF9; border-radius:var(--radius-md); padding:1.25rem 1.5rem;">
+                        <p style="font-weight:700; margin-bottom:0.5rem; color:#0D47A1;">💳 Pago en Línea — Mercado Pago (Sandbox)</p>
+                        <p style="font-size:0.9rem; color:var(--color-text-muted); margin-bottom:0; line-height:1.55;">
+                            Al presionar <strong>Confirmar y Solicitar Cita</strong>, generaremos tu folio y abriremos el Checkout Sandbox de Mercado Pago para acreditar tu anticipo de <strong>$50.00 MXN</strong> al instante.
+                        </p>
                     </div>
                 </div>
 
@@ -650,18 +595,26 @@
             </form>
         </div>
 
-        <!-- Vista de Confirmación Visual de Cita (Éxito) -->
+        <!-- Vista de Confirmación Visual de Cita (Pase Digital con QR) -->
         <div class="confirmation-card" id="confirmation-view" style="display: none;">
-            <div class="confirmation-icon">✨</div>
+            <div class="confirmation-icon">🎫</div>
+            <span class="section-tag">Pase Digital Yessy Nails</span>
             <h3>¡Tu Cita ha sido Registrada!</h3>
-            <p style="color: var(--color-text-muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto;">
-                Hemos recibido tu solicitud de cita exitosamente. A continuación te presentamos el resumen de tu reserva:
+            <p style="color: var(--color-text-muted); font-size: 1rem; max-width: 580px; margin: 0 auto 1.25rem;">
+                Presenta este Pase Digital con código QR al llegar al estudio para validar tu cita al instante.
             </p>
+
+            <!-- Bloque QR -->
+            <div id="conf-qr-box" style="display: inline-flex; flex-direction: column; align-items: center; background: #FFFFFF; border: 2px solid var(--color-border-gold); border-radius: 18px; padding: 1.25rem 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+                <img id="conf-qr-img" src="" alt="Código QR Pase Digital" style="width: 190px; height: 190px; object-fit: contain; display: none;">
+                <div style="margin-top: 0.65rem; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.06em; color: var(--color-accent-dark);" id="conf-folio-badge">YN-2026-XXXX</div>
+                <span id="conf-pago-badge" style="margin-top: 0.4rem; padding: 0.25rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; background: #FFF3E0; color: #E65100;">PAGO PENDIENTE</span>
+            </div>
 
             <div class="receipt-box">
                 <div class="receipt-row">
                     <span>Folio de Reserva:</span>
-                    <span id="conf-folio" style="color: var(--color-accent-dark); font-size: 1.1rem;">#0</span>
+                    <span id="conf-folio" style="color: var(--color-accent-dark); font-size: 1.1rem; font-weight: 700;">#0</span>
                 </div>
                 <div class="receipt-row">
                     <span>Clienta:</span>
@@ -679,6 +632,10 @@
                     <span>Servicio Solicitado:</span>
                     <span id="conf-servicio">-</span>
                 </div>
+                <div class="receipt-row" id="conf-materiales-row" style="display:none;">
+                    <span>Materiales Elegidos:</span>
+                    <span id="conf-materiales">-</span>
+                </div>
                 <div class="receipt-row">
                     <span>Fecha y Horario:</span>
                     <span id="conf-fecha">-</span>
@@ -693,8 +650,17 @@
                 </div>
             </div>
 
-            <!-- Botón Opcional para enviar comprobante a Yessica por WhatsApp -->
-            <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 460px; margin: 0 auto;">
+            <!-- Acciones del Pase Digital -->
+            <div style="display: flex; flex-direction: column; gap: 0.85rem; max-width: 460px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-download-qr-pass" onclick="downloadAppointmentQrPass()">
+                        📥 Descargar Pase QR
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
+                        🖨️ Imprimir Pase
+                    </button>
+                </div>
+
                 <a href="#" class="btn btn-primary" id="btn-send-whatsapp-voucher" target="_blank" rel="noopener" style="background: #25D366; box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);">
                     📱 Enviar Comprobante por WhatsApp a Yessica
                 </a>
@@ -706,6 +672,34 @@
         </div>
 
     </main>
+
+    <!-- ============================================================
+         MODAL EMERGENTE: CHECKOUT MERCADO PAGO SANDBOX
+         ============================================================ -->
+    <div id="mp-sandbox-modal" style="display:none; position:fixed; inset:0; background:rgba(20,16,24,0.65); backdrop-filter:blur(4px); z-index:2100; align-items:center; justify-content:center; padding:1rem;">
+        <div role="dialog" aria-modal="true" style="background:#fff; width:100%; max-width:440px; border-radius:20px; padding:1.75rem; box-shadow:0 24px 60px rgba(0,0,0,0.28); text-align:center;">
+            <span style="display:inline-block; background:#E3F2FD; color:#0D47A1; font-size:0.75rem; font-weight:700; padding:4px 12px; border-radius:20px; margin-bottom:0.75rem;">
+                💳 Mercado Pago — Checkout Sandbox
+            </span>
+            <h3 style="margin:0 0 0.4rem; font-family:var(--font-heading);">Confirmar Anticipo en Línea</h3>
+            <p style="font-size:0.88rem; color:var(--color-text-muted); margin-bottom:1.15rem;" id="mp-modal-desc">
+                Simulación de pasarela segura de Mercado Pago. No se realiza ningún cargo real.
+            </p>
+            <div style="background:#F7FAFF; border:1.5px solid #BBDEFB; border-radius:12px; padding:1rem; margin-bottom:1.25rem; text-align:left; font-size:0.9rem; line-height:1.7;">
+                <div><span>Folio:</span> <strong id="mp-modal-folio">—</strong></div>
+                <div><span>Concepto:</span> <strong id="mp-modal-titulo">Anticipo Cita Yessy Nails</strong></div>
+                <div><span>Monto a pagar:</span> <strong id="mp-modal-monto" style="color:#0D47A1; font-size:1.05rem;">$50.00 MXN</strong></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                <button type="button" id="btn-mp-confirm" class="btn btn-primary" style="width:100%; background:linear-gradient(135deg,#009EE3,#007EB5);">
+                    ✅ Aprobar Pago (Sandbox)
+                </button>
+                <button type="button" id="btn-mp-cancel" class="btn btn-secondary btn-sm" style="width:100%;">
+                    Continuar con pago pendiente en sucursal
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ============================================================
          MODAL EMERGENTE: DATOS BANCARIOS PARA TRANSFERENCIA SPEI

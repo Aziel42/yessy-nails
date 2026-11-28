@@ -24,6 +24,7 @@ import uploadRoutes      from './src/routes/upload.routes.js';
 import pedidoRoutes      from './src/routes/pedido.routes.js';
 import clienteRoutes    from './src/routes/cliente.routes.js';
 import materialRoutes    from './src/routes/material.routes.js';
+import paymentRoutes     from './src/routes/payment.routes.js';
 
 // Middlewares de error
 import { errorMiddleware, notFoundMiddleware } from './src/middlewares/error.middleware.js';
@@ -100,6 +101,7 @@ app.use('/api/upload',      uploadRoutes);
 app.use('/api/pedidos',     pedidoRoutes);
 app.use('/api/clientes',   clienteRoutes);
 app.use('/api/materiales',  materialRoutes);
+app.use('/api/pagos',       paymentRoutes);
 
 // ── Ruta raíz de la API (info) ───────────────────────────────────
 app.get('/api', (_req, res) => {

@@ -15,8 +15,38 @@ const ALLOWED_FIELDS = [
     'fecha_cita', 'hora_cita', 'notas_diseno', 'total_estimado',
     'anticipo_requerido', 'metodo_pago', 'folio_transferencia',
     'estado_confirmacion_cliente', 'estado_cita', 'estado_pago',
-    'materiales_ids', 'materiales_seleccionados'
+    'materiales_ids', 'materiales_seleccionados',
+    'folio', 'codigo_qr', 'pago_estado', 'monto_total'
 ];
+
+// Respaldo en memoria para metadatos QR/folio si la migración SQL aún no se ha ejecutado
+const qrMetaById = new Map();
+const qrMetaByFolio = new Map();
+
+function saveQrMeta(row, source = {}) {
+    if (!row || !row.id) return row;
+    const meta = {
+        folio: row.folio || source.folio || qrMetaById.get(row.id)?.folio || null,
+        codigo_qr: row.codigo_qr || source.codigo_qr || qrMetaById.get(row.id)?.codigo_qr || null,
+        pago_estado: row.pago_estado || source.pago_estado || qrMetaById.get(row.id)?.pago_estado || (row.estado_pago === 'pagado' ? 'pagado' : 'pendiente'),
+        monto_total: row.monto_total ?? source.monto_total ?? qrMetaById.get(row.id)?.monto_total ?? row.total_estimado ?? null
+    };
+    qrMetaById.set(row.id, meta);
+    if (meta.folio) qrMetaByFolio.set(meta.folio.toUpperCase(), row.id);
+    return { ...row, ...meta };
+}
+
+function stripMissingColumns(payload, errorMsg = '') {
+    const optionalCols = ['materiales_ids', 'materiales_seleccionados', 'folio', 'codigo_qr', 'pago_estado', 'monto_total'];
+    let stripped = false;
+    for (const col of optionalCols) {
+        if (errorMsg.includes(col) && payload[col] !== undefined) {
+            delete payload[col];
+            stripped = true;
+        }
+    }
+    return stripped;
+}
 
 function buildPayload(data) {
     const payload = {};
@@ -30,11 +60,19 @@ function buildPayload(data) {
 function flatten(row) {
     if (!row) return row;
     const { servicios, ...rest } = row;
-    return {
+    const flat = {
         ...rest,
         servicio_nombre: servicios ? servicios.nombre : null,
         servicio_categoria: servicios ? servicios.categoria : null
     };
+    const cached = qrMetaById.get(flat.id);
+    if (cached) {
+        flat.folio = flat.folio || cached.folio;
+        flat.codigo_qr = flat.codigo_qr || cached.codigo_qr;
+        flat.pago_estado = flat.pago_estado || cached.pago_estado;
+        flat.monto_total = flat.monto_total ?? cached.monto_total;
+    }
+    return flat;
 }
 
 /**
@@ -83,10 +121,10 @@ export async function createAppointment(data) {
         .select(SELECT_WITH_SERVICE)
         .single();
 
-    // Respaldo si las columnas materiales_ids / materiales_seleccionados aún no existen en Supabase
-    if (error && (error.message.includes('materiales_ids') || error.message.includes('materiales_seleccionados'))) {
-        delete payload.materiales_ids;
-        delete payload.materiales_seleccionados;
+    // Respaldo si columnas opcionales aún no existen en Supabase
+    let attempts = 0;
+    while (error && attempts < 4 && stripMissingColumns(payload, error.message)) {
+        attempts++;
         const retry = await supabaseAdmin
             .from(TABLE)
             .insert(payload)
@@ -97,7 +135,7 @@ export async function createAppointment(data) {
     }
 
     if (error) throw new Error(error.message);
-    return flatten(created);
+    return saveQrMeta(flatten(created), data);
 }
 
 /**
@@ -109,15 +147,67 @@ export async function updateAppointment(id, data) {
     const payload = buildPayload(data);
     if (Object.keys(payload).length === 0) return null;
 
-    const { data: updated, error } = await supabaseAdmin
+    let { data: updated, error } = await supabaseAdmin
         .from(TABLE)
         .update(payload)
         .eq('id', id)
         .select(SELECT_WITH_SERVICE)
         .maybeSingle();
 
+    let attempts = 0;
+    while (error && attempts < 4 && stripMissingColumns(payload, error.message)) {
+        attempts++;
+        if (Object.keys(payload).length === 0) {
+            const existing = await getAppointmentById(id);
+            return saveQrMeta(existing, data);
+        }
+        const retry = await supabaseAdmin
+            .from(TABLE)
+            .update(payload)
+            .eq('id', id)
+            .select(SELECT_WITH_SERVICE)
+            .maybeSingle();
+        updated = retry.data;
+        error = retry.error;
+    }
+
     if (error) throw new Error(error.message);
-    return flatten(updated);
+    return saveQrMeta(flatten(updated), data);
+}
+
+/**
+ * Busca una cita por folio (ej. YN-2026-XXXX) o por ID numérico (#12).
+ * @param {string} codigo
+ */
+export async function getAppointmentByFolio(codigo) {
+    const clean = String(codigo || '').trim();
+    if (!clean) return null;
+
+    const upper = clean.toUpperCase();
+    const cachedId = qrMetaByFolio.get(upper);
+    if (cachedId) {
+        const found = await getAppointmentById(cachedId);
+        if (found) return found;
+    }
+
+    // Intentar búsqueda directa por columna folio
+    const { data, error } = await supabaseAdmin
+        .from(TABLE)
+        .select(SELECT_WITH_SERVICE)
+        .eq('folio', upper)
+        .maybeSingle();
+
+    if (!error && data) {
+        return flatten(data);
+    }
+
+    // Si es numérico o #ID, buscar por id
+    const numericMatch = clean.replace(/^#/, '');
+    if (/^\d+$/.test(numericMatch)) {
+        return getAppointmentById(Number(numericMatch));
+    }
+
+    return null;
 }
 
 /**
@@ -295,7 +385,7 @@ export async function getTodayAppointments() {
 }
 
 export default {
-    getAllAppointments, getAppointmentById, createAppointment,
+    getAllAppointments, getAppointmentById, getAppointmentByFolio, createAppointment,
     updateAppointment, deleteAppointment, checkAvailability,
     getTodayAppointments, autoCancelExpired,
     archiveOldAppointments, deleteExpiredAppointments

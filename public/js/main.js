@@ -334,7 +334,7 @@ function initSoundToggle() {
         btn.type = 'button';
         btn.id = 'sound-toggle';
         btn.className = 'sound-toggle-btn';
-        headerCta.prepend(btn);
+        headerCta.appendChild(btn);
     }
     if (!btn) return;
 
@@ -359,33 +359,48 @@ function initSoundToggle() {
 
 /* ----------------------------------------------------------------
    9. ESTADO DE SESIÓN EN BARRA DE NAVEGACIÓN
+   Orden en .header-cta: Agendar Cita -> [Correo] -> Sonido -> Salir/Entrar
    ---------------------------------------------------------------- */
 function initAuthNav() {
     const headerCta = document.querySelector('.header-cta');
-    let container = document.getElementById('auth-nav-container');
+    if (!headerCta) return;
 
-    if (!container && headerCta) {
+    let soundBtn = document.getElementById('sound-toggle');
+    if (!soundBtn) {
+        soundBtn = document.createElement('button');
+        soundBtn.type = 'button';
+        soundBtn.id = 'sound-toggle';
+        soundBtn.className = 'sound-toggle-btn';
+        headerCta.appendChild(soundBtn);
+    }
+
+    let container = document.getElementById('auth-nav-container');
+    if (!container) {
         container = document.createElement('span');
         container.id = 'auth-nav-container';
         container.className = 'auth-nav-container';
-        const ctaLink = headerCta.querySelector('a.btn-primary');
-        if (ctaLink) {
-            headerCta.insertBefore(container, ctaLink);
-        } else {
-            headerCta.appendChild(container);
-        }
+        headerCta.appendChild(container);
     }
-    if (!container) return;
 
     const session = window.YESSY_AUTH ? window.YESSY_AUTH.getSession() : null;
     if (session && session.user && session.user.email) {
         const displayName = (typeof window.YESSY_AUTH.getDisplayName === 'function')
             ? window.YESSY_AUTH.getDisplayName()
             : session.user.email.split('@')[0];
-        container.innerHTML = `
-            <span class="auth-user-email" title="${escapeHTML(session.user.email)}">👤 ${escapeHTML(displayName)}</span>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-nav-logout">Salir</button>
-        `;
+
+        // Correo/nombre antes del botón de sonido, botón Salir después del botón de sonido
+        let userBadge = headerCta.querySelector('.auth-user-email');
+        if (!userBadge) {
+            userBadge = document.createElement('span');
+            userBadge.className = 'auth-user-email';
+        }
+        userBadge.title = session.user.email;
+        userBadge.textContent = `👤 ${displayName}`;
+        headerCta.insertBefore(userBadge, soundBtn);
+
+        container.innerHTML = `<button type="button" class="btn btn-secondary btn-sm" id="btn-nav-logout">Salir</button>`;
+        headerCta.appendChild(container);
+
         const logoutBtn = document.getElementById('btn-nav-logout');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
@@ -393,7 +408,11 @@ function initAuthNav() {
             });
         }
     } else {
+        const existingBadge = headerCta.querySelector('.auth-user-email');
+        if (existingBadge) existingBadge.remove();
+
         container.innerHTML = `<a href="login.html" class="btn btn-secondary btn-sm" id="btn-nav-login">Entrar</a>`;
+        headerCta.appendChild(container);
     }
 }
 

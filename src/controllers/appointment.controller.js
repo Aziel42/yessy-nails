@@ -11,6 +11,7 @@ import * as MaterialModel from '../models/material.model.js';
 import * as EmailService from '../services/email.service.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { sanitizeStr, isValidEmail, safeInt } from '../utils/sanitize.js';
+import { generateFolio, generateQrDataUrl } from '../utils/qr.js';
 
 /**
  * Ejecuta la auto-cancelación si el interruptor está activado en la config.
@@ -213,8 +214,8 @@ export async function create(req, res) {
         // 'sucursal' se normaliza a 'efectivo' para cumplir el CHECK de la tabla citas.
         const folio = sanitizeStr(req.body.folio_transferencia);
         const metodoRaw = sanitizeStr(req.body.metodo_pago);
-        const metodoPago = ['efectivo', 'sucursal', 'transferencia', 'pasarela_futura'].includes(metodoRaw)
-            ? (metodoRaw === 'sucursal' ? 'efectivo' : metodoRaw)
+        const metodoPago = ['efectivo', 'sucursal', 'transferencia', 'pasarela_futura', 'mercadopago'].includes(metodoRaw)
+            ? (metodoRaw === 'sucursal' ? 'efectivo' : metodoRaw === 'mercadopago' ? 'pasarela_futura' : metodoRaw)
             : 'efectivo';
         const esPagoEnSucursal = metodoPago === 'efectivo';
         const esTransferencia = metodoPago === 'transferencia';
@@ -232,6 +233,10 @@ export async function create(req, res) {
             : notasBase;
 
         const totalCalculado = Number(servicio.precio_base || 0) + extrasTotal;
+        const montoTotal = req.body.total_estimado != null ? Number(req.body.total_estimado) : totalCalculado;
+        const folioUnico = sanitizeStr(req.body.folio) || generateFolio('YN');
+        const codigoQr = await generateQrDataUrl(folioUnico);
+        const pagoEstado = req.body.pago_estado === 'pagado' ? 'pagado' : 'pendiente';
 
         const data = {
             ...req.body,
@@ -247,8 +252,12 @@ export async function create(req, res) {
             metodo_pago: metodoPago,
             folio_transferencia: folioFinal,
             anticipo_requerido: esPagoEnSucursal ? 0 : (req.body.anticipo_requerido != null ? req.body.anticipo_requerido : 50),
-            estado_pago: 'pendiente',
-            total_estimado: req.body.total_estimado != null ? Number(req.body.total_estimado) : totalCalculado
+            estado_pago: pagoEstado === 'pagado' ? 'pagado' : 'pendiente',
+            total_estimado: montoTotal,
+            folio: folioUnico,
+            codigo_qr: codigoQr,
+            pago_estado: pagoEstado,
+            monto_total: montoTotal
         };
 
         // Registro ligero de la clienta (sin contraseña), si dejó correo.
@@ -287,7 +296,15 @@ export async function create(req, res) {
         // Correos automáticos (no bloquean la respuesta si fallan)
         enviarCorreosNuevaCita(nueva, servicio.nombre).catch(() => {});
 
-        return successResponse(res, nueva, '¡Cita agendada exitosamente! Revisa tu correo con el resumen. 💅', 201);
+        const respuesta = {
+            ...nueva,
+            folio: nueva.folio || folioUnico,
+            codigo_qr: nueva.codigo_qr || codigoQr,
+            pago_estado: nueva.pago_estado || pagoEstado,
+            monto_total: nueva.monto_total ?? montoTotal
+        };
+
+        return successResponse(res, respuesta, '¡Cita agendada exitosamente! Revisa tu correo con el resumen. 💅', 201);
     } catch (error) {
         return errorResponse(res, 'Error al agendar la cita.', 500, error.message);
     }
@@ -422,4 +439,26 @@ async function restoreAppointmentMaterials(materialesIds) {
     }
 }
 
-export default { getAll, getToday, checkAvailability, getById, create, update, remove, verifyPending };
+/**
+ * GET /api/citas/validar-qr/:codigo  (protegido - admin)
+ * Valida un pase digital por folio (YN-2026-XXXX) o ID de cita.
+ */
+export async function validateQr(req, res) {
+    try {
+        const codigo = sanitizeStr(req.params.codigo);
+        if (!codigo) {
+            return errorResponse(res, 'Ingresa un código o folio válido.', 400);
+        }
+
+        const cita = await AppointmentModel.getAppointmentByFolio(codigo);
+        if (!cita) {
+            return errorResponse(res, `No se encontró ninguna cita con el pase "${codigo}".`, 404);
+        }
+
+        return successResponse(res, cita, 'Pase QR verificado correctamente.');
+    } catch (error) {
+        return errorResponse(res, 'Error al validar el pase QR.', 500, error.message);
+    }
+}
+
+export default { getAll, getToday, checkAvailability, getById, validateQr, create, update, remove, verifyPending };

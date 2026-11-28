@@ -8,6 +8,7 @@ import * as ClienteModel from '../models/cliente.model.js';
 import * as EmailService from '../services/email.service.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { sanitizeStr, isValidEmail, safeFloat } from '../utils/sanitize.js';
+import { generateFolio, generateQrDataUrl } from '../utils/qr.js';
 
 const TIPOS_ENTREGA = ['estudio', 'punto_medio_domicilio'];
 
@@ -47,6 +48,10 @@ export async function create(req, res) {
             return sum + precio * cantidad;
         }, 0);
 
+        const folioUnico = sanitizeStr(req.body.folio) || generateFolio('YN');
+        const codigoQr = await generateQrDataUrl(folioUnico);
+        const pagoEstado = req.body.pago_estado === 'pagado' ? 'pagado' : 'pendiente';
+
         const data = {
             nombre_cliente,
             correo_cliente: correo_cliente || null,
@@ -57,7 +62,11 @@ export async function create(req, res) {
             direccion_entrega: sanitizeStr(direccion_entrega) || null,
             lat_entrega: safeFloat(lat_entrega),
             lng_entrega: safeFloat(lng_entrega),
-            estado_pedido: 'pendiente'
+            estado_pedido: pagoEstado === 'pagado' ? 'confirmado' : 'pendiente',
+            folio: folioUnico,
+            codigo_qr: codigoQr,
+            pago_estado: pagoEstado,
+            monto_total: total
         };
 
         // Registro ligero de la clienta (sin contraseña), si dejó correo
@@ -79,7 +88,15 @@ export async function create(req, res) {
         // Correos (no bloquean la respuesta si fallan)
         enviarCorreosPedido(pedido).catch(() => {});
 
-        return successResponse(res, pedido, '¡Pedido recibido! Te contactaremos para coordinar la entrega. 🛍️', 201);
+        const respuesta = {
+            ...pedido,
+            folio: pedido.folio || folioUnico,
+            codigo_qr: pedido.codigo_qr || codigoQr,
+            pago_estado: pedido.pago_estado || pagoEstado,
+            monto_total: pedido.monto_total ?? total
+        };
+
+        return successResponse(res, respuesta, '¡Pedido recibido! Te contactaremos para coordinar la entrega. 🛍️', 201);
     } catch (error) {
         return errorResponse(res, 'Error al registrar el pedido.', 500, error.message);
     }

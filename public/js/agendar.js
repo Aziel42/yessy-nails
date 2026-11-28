@@ -483,9 +483,9 @@ function onPaymentChange() {
     const panelSpei     = document.getElementById('panel-spei');
     const panelTarjeta  = document.getElementById('panel-tarjeta');
 
-    if (panelSucursal) panelSucursal.style.display = val === 'efectivo'        ? 'block' : 'none';
-    if (panelSpei)     panelSpei.style.display     = val === 'transferencia'   ? 'block' : 'none';
-    if (panelTarjeta)  panelTarjeta.style.display  = val === 'pasarela_futura' ? 'block' : 'none';
+    if (panelSucursal) panelSucursal.style.display = val === 'efectivo'      ? 'block' : 'none';
+    if (panelSpei)     panelSpei.style.display     = val === 'transferencia' ? 'block' : 'none';
+    if (panelTarjeta)  panelTarjeta.style.display  = (val === 'mercadopago' || val === 'pasarela_futura') ? 'block' : 'none';
 
     if (val === 'transferencia' && !speiDataLoaded) {
         loadSpeiData();
@@ -750,6 +750,9 @@ function initAppointmentForm() {
         } else if (metodoPago === 'transferencia') {
             const rawFolio = document.getElementById('folio_transferencia')?.value.trim() || '';
             folioTransferencia = rawFolio || null;
+        } else if (metodoPago === 'mercadopago') {
+            anticipoRequerido = 50;
+            folioTransferencia = null;
         } else if (metodoPago === 'pasarela_futura') {
             const cardCheck = validateCardFields();
             if (!cardCheck.valid) {
@@ -793,9 +796,14 @@ function initAppointmentForm() {
                 const optSelected = selectServicio.selectedOptions[0];
                 const servicioNombre = optSelected ? optSelected.getAttribute('data-name') : 'Servicio en Salón';
 
-                showConfirmationView(result.data, servicioNombre);
                 // Limpiar sessionStorage de presupuesto
                 sessionStorage.removeItem('yessy_presupuesto');
+
+                if (metodoPago === 'mercadopago') {
+                    await handleMercadoPagoCitaFlow(result.data, servicioNombre);
+                } else {
+                    showConfirmationView(result.data, servicioNombre);
+                }
             } else {
                 showAlert(result.message || 'No se pudo agendar la cita. Por favor intenta otro horario.', 'error');
                 if (res.status === 409) {
@@ -830,10 +838,94 @@ function showAlert(message, type = 'error') {
     alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+let lastConfirmedCita = null;
+
+async function handleMercadoPagoCitaFlow(cita, servicioNombre) {
+    try {
+        const prefRes = await fetch('/api/pagos/crear-preferencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo: 'cita',
+                referencia_id: cita.id,
+                folio: cita.folio,
+                titulo: `Anticipo Cita Yessy Nails - ${servicioNombre}`,
+                monto: 50,
+                correo_cliente: cita.correo_cliente,
+                nombre_cliente: cita.nombre_cliente
+            })
+        });
+        const prefJson = await prefRes.json();
+        const pref = prefJson.data || {};
+
+        if (!pref.sandbox_simulado && (pref.sandbox_init_point || pref.init_point)) {
+            window.open(pref.sandbox_init_point || pref.init_point, '_blank', 'noopener');
+        }
+
+        openMpSandboxModal(cita, servicioNombre, 50);
+    } catch (err) {
+        showConfirmationView(cita, servicioNombre);
+    }
+}
+
+function openMpSandboxModal(cita, servicioNombre, monto) {
+    const modal = document.getElementById('mp-sandbox-modal');
+    if (!modal) {
+        showConfirmationView(cita, servicioNombre);
+        return;
+    }
+
+    document.getElementById('mp-modal-folio').textContent = cita.folio || `#${cita.id}`;
+    document.getElementById('mp-modal-titulo').textContent = `Anticipo Cita — ${servicioNombre}`;
+    document.getElementById('mp-modal-monto').textContent = `$${Number(monto).toFixed(2)} MXN`;
+    modal.style.display = 'flex';
+
+    const btnConfirm = document.getElementById('btn-mp-confirm');
+    const btnCancel  = document.getElementById('btn-mp-cancel');
+
+    btnConfirm.onclick = async () => {
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = '⏳ Confirmando pago...';
+        try {
+            const confRes = await fetch('/api/pagos/confirmar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tipo: 'cita', id: cita.id, folio: cita.folio })
+            });
+            const confJson = await confRes.json();
+            const finalCita = confJson.success && confJson.data ? { ...cita, ...confJson.data } : { ...cita, pago_estado: 'pagado', estado_pago: 'pagado' };
+            modal.style.display = 'none';
+            showConfirmationView(finalCita, servicioNombre);
+        } catch (e) {
+            modal.style.display = 'none';
+            showConfirmationView(cita, servicioNombre);
+        } finally {
+            btnConfirm.disabled = false;
+            btnConfirm.textContent = '✅ Aprobar Pago (Sandbox)';
+        }
+    };
+
+    btnCancel.onclick = () => {
+        modal.style.display = 'none';
+        showConfirmationView(cita, servicioNombre);
+    };
+}
+
+window.downloadAppointmentQrPass = function downloadAppointmentQrPass() {
+    if (!lastConfirmedCita || !lastConfirmedCita.codigo_qr) return;
+    const link = document.createElement('a');
+    link.href = lastConfirmedCita.codigo_qr;
+    link.download = `Pase-${lastConfirmedCita.folio || 'YessyNails'}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+};
+
 /**
- * Muestra la vista de confirmación visual con resumen de reserva y botón WhatsApp
+ * Muestra la vista de confirmación visual con Pase Digital y Código QR
  */
 function showConfirmationView(cita, servicioNombre) {
+    lastConfirmedCita = cita;
     const formCard = document.getElementById('booking-form-card');
     const confirmView = document.getElementById('confirmation-view');
 
@@ -843,8 +935,26 @@ function showConfirmationView(cita, servicioNombre) {
         confirmView.scrollIntoView({ behavior: 'smooth' });
     }
 
+    const folioDisplay = cita.folio || `#${cita.id}`;
+    const isPaid = cita.pago_estado === 'pagado' || cita.estado_pago === 'pagado';
+
+    // Código QR
+    const qrImg = document.getElementById('conf-qr-img');
+    const folioBadge = document.getElementById('conf-folio-badge');
+    const pagoBadge = document.getElementById('conf-pago-badge');
+    if (qrImg && cita.codigo_qr) {
+        qrImg.src = cita.codigo_qr;
+        qrImg.style.display = 'block';
+    }
+    if (folioBadge) folioBadge.textContent = folioDisplay;
+    if (pagoBadge) {
+        pagoBadge.textContent = isPaid ? '✅ PAGADO' : '⏳ PAGO PENDIENTE';
+        pagoBadge.style.background = isPaid ? '#E8F5E9' : '#FFF3E0';
+        pagoBadge.style.color = isPaid ? '#2E7D32' : '#E65100';
+    }
+
     // Llenar datos en el comprobante visual
-    document.getElementById('conf-folio').textContent = `#${cita.id}`;
+    document.getElementById('conf-folio').textContent = folioDisplay;
     document.getElementById('conf-nombre').textContent = cita.nombre_cliente;
     document.getElementById('conf-telefono').textContent = cita.telefono_cliente;
 
@@ -857,13 +967,21 @@ function showConfirmationView(cita, servicioNombre) {
     }
 
     document.getElementById('conf-servicio').textContent = servicioNombre;
+
+    const matRow = document.getElementById('conf-materiales-row');
+    const matEl = document.getElementById('conf-materiales');
+    if (Array.isArray(cita.materiales_seleccionados) && cita.materiales_seleccionados.length > 0 && matRow && matEl) {
+        matEl.textContent = cita.materiales_seleccionados.join(', ');
+        matRow.style.display = 'flex';
+    }
+
     document.getElementById('conf-fecha').textContent = `${formatDate(cita.fecha_cita)} a las ${formatTime(cita.hora_cita)}`;
-    document.getElementById('conf-total').textContent = `$${parseFloat(cita.total_estimado || 0).toFixed(2)} MXN`;
+    document.getElementById('conf-total').textContent = `$${parseFloat(cita.monto_total ?? cita.total_estimado ?? 0).toFixed(2)} MXN`;
 
     const metodoTexto = cita.metodo_pago === 'transferencia'
         ? 'Transferencia SPEI ($50 anticipo)'
         : cita.metodo_pago === 'pasarela_futura'
-            ? 'Pago con tarjeta — Modo prueba ($50 anticipo)'
+            ? 'Pago en Línea — Mercado Pago Sandbox ($50 anticipo)'
             : 'Pago en sucursal (100% efectivo — Sin anticipo)';
     document.getElementById('conf-metodo').textContent = metodoTexto;
 
@@ -873,14 +991,14 @@ function showConfirmationView(cita, servicioNombre) {
         const waText = 
 `¡Hola Yessica! Acabo de registrar mi cita en Yessy Nails 💅✨
 
-📌 *Folio de Reserva:* #${cita.id}
+📌 *Folio de Reserva:* ${folioDisplay}
 👤 *Cliente:* ${cita.nombre_cliente}
 📱 *WhatsApp:* ${cita.telefono_cliente}
 💅 *Servicio:* ${servicioNombre}
 📅 *Fecha:* ${formatDate(cita.fecha_cita)}
 🕐 *Hora:* ${formatTime(cita.hora_cita)}
-💳 *Método de Pago:* ${metodoTexto}
-💵 *Total Estimado:* $${parseFloat(cita.total_estimado || 0).toFixed(2)} MXN
+💳 *Método de Pago:* ${metodoTexto} (${isPaid ? 'PAGADO' : 'PENDIENTE'})
+💵 *Total Estimado:* $${parseFloat(cita.monto_total ?? cita.total_estimado ?? 0).toFixed(2)} MXN
 📝 *Notas / Referencia:* ${cita.notas_diseno || 'Sin notas adicionales'}
 
 ¿Me confirmas la disponibilidad para mi cita, por favor? Muchas gracias 🥰`;

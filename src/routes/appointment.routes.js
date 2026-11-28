@@ -14,10 +14,11 @@ router.get('/disponibilidad', AppointmentController.checkAvailability);
 router.post('/',              AppointmentController.create);
 
 // ── Rutas protegidas (admin) ────────────────────────────────────
-router.post('/verificar',     authMiddleware, AppointmentController.verifyPending);
-router.get('/',               authMiddleware, AppointmentController.getAll);
-router.get('/hoy',            authMiddleware, AppointmentController.getToday);
-router.get('/:id',            authMiddleware, AppointmentController.getById);
+router.post('/verificar',         authMiddleware, AppointmentController.verifyPending);
+router.get('/',                   authMiddleware, AppointmentController.getAll);
+router.get('/hoy',                authMiddleware, AppointmentController.getToday);
+router.get('/validar-qr/:codigo', authMiddleware, AppointmentController.validateQr);
+router.get('/:id',                authMiddleware, AppointmentController.getById);
 router.put('/:id',            authMiddleware, AppointmentController.update);
 router.delete('/:id',         authMiddleware, AppointmentController.remove);
 

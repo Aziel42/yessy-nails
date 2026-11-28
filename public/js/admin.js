@@ -397,7 +397,10 @@ const ADMIN_APP = {
                         ${this.escapeHTML(p.descripcion || '')}
                     </td>
                     <td>
-                        <button type="button" class="btn btn-secondary btn-sm" style="color:#C62828;" onclick="ADMIN_APP.deletePortfolio(${p.id})">🗑️</button>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.openEditPortfolioModal(${p.id})" title="Editar diseño">✏️ Editar</button>
+                            <button type="button" class="btn btn-secondary btn-sm" style="color:#C62828;" onclick="ADMIN_APP.deletePortfolio(${p.id})" title="Eliminar diseño">🗑️</button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -498,8 +501,30 @@ const ADMIN_APP = {
     openCreatePortfolioModal() {
         const modal = document.getElementById('portfolio-modal');
         const form = document.getElementById('portfolio-modal-form');
+        const titleEl = document.getElementById('portfolio-modal-title');
+        if (titleEl) titleEl.textContent = 'Subir Nuevo Trabajo al Portafolio';
         form.reset();
+        if (form.portfolio_id) form.portfolio_id.value = '';
         this.setImagePreview('portfolio-img-preview', '');
+        modal.classList.add('active');
+    },
+
+    openEditPortfolioModal(id) {
+        const item = this.allPortfolio.find(p => p.id === id);
+        if (!item) return;
+
+        const modal = document.getElementById('portfolio-modal');
+        const form = document.getElementById('portfolio-modal-form');
+        const titleEl = document.getElementById('portfolio-modal-title');
+        if (titleEl) titleEl.textContent = `Editar Diseño #${item.id}`;
+
+        if (form.portfolio_id) form.portfolio_id.value = item.id;
+        form.titulo.value = item.titulo || '';
+        form.estilo.value = item.estilo || 'Minimalista';
+        if (form.precio) form.precio.value = item.precio != null ? item.precio : '';
+        form.descripcion.value = item.descripcion || '';
+        form.imagen_url.value = item.imagen_url || '';
+        this.setImagePreview('portfolio-img-preview', item.imagen_url);
         modal.classList.add('active');
     },
 
@@ -510,16 +535,25 @@ const ADMIN_APP = {
     async handleSavePortfolio(e) {
         e.preventDefault();
         const form = e.target;
+        const id = form.portfolio_id ? form.portfolio_id.value : '';
+        const isEdit = Boolean(id);
+
         const payload = {
             titulo: form.titulo.value.trim(),
             estilo: form.estilo.value,
             descripcion: form.descripcion.value.trim(),
             imagen_url: form.imagen_url.value.trim()
         };
+        if (form.precio && form.precio.value !== '') {
+            payload.precio = parseFloat(form.precio.value);
+        }
+
+        const url = isEdit ? `/api/portafolio/${id}` : '/api/portafolio';
+        const method = isEdit ? 'PUT' : 'POST';
 
         try {
-            const res = await fetch('/api/portafolio', {
-                method: 'POST',
+            const res = await fetch(url, {
+                method,
                 headers: this.getAuthHeaders(),
                 body: JSON.stringify(payload)
             });
@@ -528,7 +562,7 @@ const ADMIN_APP = {
                 this.closePortfolioModal();
                 this.loadPortfolio();
             } else {
-                alert(json.message || 'Error al agregar trabajo al portafolio.');
+                alert(json.message || 'Error al guardar trabajo del portafolio.');
             }
         } catch (error) {
             alert('Error de conexión.');
@@ -856,7 +890,7 @@ const ADMIN_APP = {
         }
     },
 
-    async deleteAppointment(id) {
+    deleteAppointment(id) {
         if (!confirm(`¿Eliminar definitivamente la cita #${id}?`)) return;
         try {
             const res = await fetch(`/api/citas/${id}`, {
@@ -871,6 +905,80 @@ const ADMIN_APP = {
             }
         } catch (error) {
             alert('Error de conexión.');
+        }
+    },
+
+    // ── VALIDACIÓN DE PASE QR / FOLIO ───────────────────────────
+    async validateQrFolio() {
+        const input = document.getElementById('admin-validate-input');
+        const resultBox = document.getElementById('validate-result-box');
+        const rawValue = input.value.trim().toUpperCase();
+
+        if (!rawValue) {
+            this.showAlert(resultBox, 'Por favor ingresa un folio o escanea un código QR.', 'error');
+            return;
+        }
+
+        resultBox.style.display = 'block';
+        resultBox.style.background = '#F3F4F6';
+        resultBox.style.color = '#374151';
+        resultBox.style.border = '1px solid #D1D5DB';
+        resultBox.innerHTML = '⏳ Verificando folio en la base de datos...';
+
+        try {
+            // Intentar validar como cita
+            const res = await fetch(`/api/citas/validar/${encodeURIComponent(rawValue)}`, {
+                headers: this.getAuthHeaders()
+            });
+            const json = await res.json();
+
+            if (json.success && json.data) {
+                const cita = json.data;
+                const isPaid = cita.pago_estado === 'pagado' || cita.estado_pago === 'pagado';
+                
+                resultBox.style.background = '#E8F5E9';
+                resultBox.style.color = '#2E7D32';
+                resultBox.style.border = '1px solid #A5D6A7';
+                resultBox.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem; color: #1B5E20;">✅ Pase Válido: ${cita.folio}</h4>
+                            <p style="margin: 0.25rem 0;"><strong>Clienta:</strong> ${this.escapeHTML(cita.nombre_cliente)}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Servicio:</strong> ${this.escapeHTML(cita.servicio_nombre)}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Fecha/Hora:</strong> ${cita.fecha_cita} a las ${cita.hora_cita}</p>
+                            <p style="margin: 0.25rem 0;"><strong>Estado Pago:</strong> <span style="font-weight: 700; color: ${isPaid ? '#2E7D32' : '#E65100'};">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <button class="btn btn-primary btn-sm" onclick="ADMIN_APP.confirmArrival(${cita.id})">Confirmar Llegada</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Si no es cita, probar como pedido (opcional, según lógica de negocio)
+                this.showAlert(resultBox, json.message || 'Folio no encontrado o inválido.', 'error');
+            }
+        } catch (error) {
+            this.showAlert(resultBox, 'Error al conectar con el servidor para validar.', 'error');
+        }
+    },
+
+    async confirmArrival(citaId) {
+        if (!confirm('¿Confirmar la llegada de la clienta y marcar cita como confirmada?')) return;
+        try {
+            const res = await fetch(`/api/citas/${citaId}`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ estado_cita: 'confirmada' })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert('¡Llegada confirmada! La cita ahora aparece como confirmada.');
+                document.getElementById('validate-result-box').style.display = 'none';
+                document.getElementById('admin-validate-input').value = '';
+                this.loadAppointments();
+            }
+        } catch (e) {
+            alert('Error al confirmar llegada.');
         }
     },
 
@@ -1440,6 +1548,7 @@ const ADMIN_APP = {
             const res = await fetch('/api/materiales?incluir_inactivos=true');
             const json = await res.json();
             const materiales = json.data || [];
+            this.allMaterials = materiales;
 
             const agotados = materiales.filter(m => Number(m.stock_actual) <= 0);
             const bajos = materiales.filter(m => Number(m.stock_actual) > 0 && Number(m.stock_actual) <= Number(m.stock_minimo));
@@ -1506,6 +1615,11 @@ const ADMIN_APP = {
                                         style="background: #E8F5E9; color: #2E7D32; border-color: #A5D6A7;"
                                         onclick="ADMIN_APP.restockMaterial(${Number(m.id)}, ${stock})">
                                     +5 Reabastecer
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        onclick="ADMIN_APP.openEditMaterialModal(${Number(m.id)})"
+                                        title="Editar material">
+                                    ✏️ Editar
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-sm"
                                         style="color: #C62828; border-color: #FFCDD2;"
@@ -1591,6 +1705,65 @@ const ADMIN_APP = {
             }
         } catch (error) {
             alert('Error de conexión al reabastecer.');
+        }
+    },
+
+    openEditMaterialModal(id) {
+        const mat = (this.allMaterials || []).find(m => Number(m.id) === Number(id));
+        if (!mat) return;
+
+        const modal = document.getElementById('material-modal');
+        const form = document.getElementById('material-modal-form');
+        const titleEl = document.getElementById('material-modal-title');
+        if (titleEl) titleEl.textContent = `Editar Material: ${mat.nombre}`;
+
+        form.material_id.value = mat.id;
+        form.nombre.value = mat.nombre || '';
+        form.categoria.value = mat.categoria || 'Barniz';
+        form.color_hex.value = mat.color_hex || '#D4A5A5';
+        form.stock_actual.value = Number(mat.stock_actual ?? 0);
+        form.stock_minimo.value = Number(mat.stock_minimo ?? 3);
+        form.consumo_por_cita.value = Number(mat.consumo_por_cita ?? 1);
+        form.precio_extra.value = Number(mat.precio_extra ?? 0);
+
+        modal.classList.add('active');
+    },
+
+    closeMaterialModal() {
+        document.getElementById('material-modal').classList.remove('active');
+    },
+
+    async handleSaveMaterialModal(e) {
+        e.preventDefault();
+        const form = e.target;
+        const id = form.material_id.value;
+        if (!id) return;
+
+        const payload = {
+            nombre: form.nombre.value.trim(),
+            categoria: form.categoria.value,
+            color_hex: form.color_hex.value || '#D4A5A5',
+            stock_actual: Math.max(0, Number(form.stock_actual.value) || 0),
+            stock_minimo: Math.max(0, Number(form.stock_minimo.value) || 0),
+            consumo_por_cita: Math.max(1, Number(form.consumo_por_cita.value) || 1),
+            precio_extra: Math.max(0, Number(form.precio_extra.value) || 0)
+        };
+
+        try {
+            const res = await fetch(`/api/materiales/${encodeURIComponent(id)}`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (json.success) {
+                this.closeMaterialModal();
+                await this.loadMaterials();
+            } else {
+                alert(json.message || 'No se pudo actualizar el material.');
+            }
+        } catch (error) {
+            alert('Error de conexión al actualizar material.');
         }
     },
 
