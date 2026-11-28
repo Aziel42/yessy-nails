@@ -5,14 +5,22 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.YESSY_AUTH) {
+        window.YESSY_AUTH.autoFillForm('#appointment-form');
+    }
     initDatePicker();
+    initWizardSteps();
     loadServicesSelect();
+    loadMaterialsConfigurator();
     checkCotizadorParams();
     initPaymentMethodCards();
     initAppointmentForm();
 });
 
 let loadedServices = [];
+let loadedMaterials = [];
+let selectedMaterialIds = [];
+let activeMaterialCategory = 'todos';
 let whatsappPhone = '5215587431290';
 let activeQuoteTotal = null;
 
@@ -77,18 +85,273 @@ async function loadServicesSelect() {
                 Object.keys(grouped).map(cat => `
                     <optgroup label="${escapeHTML(cat)}">
                         ${grouped[cat].map(s => `
-                            <option value="${s.id}" data-price="${s.precio_base}" data-name="${escapeHTML(s.nombre)}">
+                            <option value="${s.id}" data-price="${s.precio_base}" data-duration="${s.duracion_minutos}" data-name="${escapeHTML(s.nombre)}">
                                 ${escapeHTML(s.nombre)} — $${parseFloat(s.precio_base).toFixed(2)} MXN (${s.duracion_minutos} min)
                             </option>
                         `).join('')}
                     </optgroup>
                 `).join('');
 
+            renderServicesCards();
+            select.addEventListener('change', () => {
+                syncServiceSelectionUI();
+            });
+
             // Si había un servicio preseleccionado por cotizador, aplicarlo ahora
             applyPreselectedService();
         }
     } catch (error) {
         console.warn('ℹ️ Usando catálogo estático de servicios:', error.message);
+    }
+}
+
+/* ----------------------------------------------------------------
+   2B. ASISTENTE EN 2 PASOS Y CONFIGURADOR DE MATERIALES
+   ---------------------------------------------------------------- */
+function initWizardSteps() {
+    const btnNext = document.getElementById('btn-next-step-2');
+    const btnBack = document.getElementById('btn-back-step-1');
+
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            const select = document.getElementById('servicio_id');
+            if (!select || !select.value) {
+                showAlert('Por favor selecciona un servicio base en el Paso 1 para continuar.', 'error');
+                return;
+            }
+            const alertBox = document.getElementById('booking-alert');
+            if (alertBox) alertBox.style.display = 'none';
+            goToWizardStep(2);
+        });
+    }
+
+    if (btnBack) {
+        btnBack.addEventListener('click', () => goToWizardStep(1));
+    }
+
+    // Filtros de categoría de materiales
+    document.querySelectorAll('#materials-filter-bar .mat-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#materials-filter-bar .mat-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeMaterialCategory = btn.dataset.cat || 'todos';
+            renderMaterialsGrid();
+        });
+    });
+}
+
+function goToWizardStep(step) {
+    const step1 = document.getElementById('booking-step-1');
+    const step2 = document.getElementById('booking-step-2');
+    const pill1 = document.getElementById('wizard-step-1-pill');
+    const pill2 = document.getElementById('wizard-step-2-pill');
+
+    if (step === 2) {
+        if (step1) step1.style.display = 'none';
+        if (step2) step2.style.display = 'block';
+        if (pill1) { pill1.classList.remove('active'); pill1.classList.add('completed'); }
+        if (pill2) { pill2.classList.add('active'); }
+        updateStep2Summary();
+    } else {
+        if (step1) step1.style.display = 'block';
+        if (step2) step2.style.display = 'none';
+        if (pill1) { pill1.classList.add('active'); pill1.classList.remove('completed'); }
+        if (pill2) { pill2.classList.remove('active'); }
+    }
+    const formCard = document.getElementById('booking-form-card');
+    if (formCard) formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderServicesCards() {
+    const grid = document.getElementById('services-cards-grid');
+    const select = document.getElementById('servicio_id');
+    if (!grid || !loadedServices.length) return;
+
+    const currentVal = select ? select.value : '';
+    grid.innerHTML = loadedServices.map(s => `
+        <button type="button" class="service-pick-card ${String(s.id) === String(currentVal) ? 'selected' : ''}" data-service-id="${s.id}">
+            <div>
+                <div class="service-pick-cat">${escapeHTML(s.categoria)}</div>
+                <h4 class="service-pick-title">${escapeHTML(s.nombre)}</h4>
+            </div>
+            <div class="service-pick-meta">
+                <span>⏱️ ${s.duracion_minutos} min</span>
+                <span class="service-pick-price">$${parseFloat(s.precio_base).toFixed(2)} MXN</span>
+            </div>
+        </button>
+    `).join('');
+
+    grid.querySelectorAll('.service-pick-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = card.getAttribute('data-service-id');
+            if (select) {
+                select.value = id;
+            }
+            syncServiceSelectionUI();
+        });
+    });
+}
+
+function syncServiceSelectionUI() {
+    const select = document.getElementById('servicio_id');
+    const selectedId = select ? select.value : '';
+    const service = loadedServices.find(s => String(s.id) === String(selectedId));
+
+    document.querySelectorAll('.service-pick-card').forEach(card => {
+        card.classList.toggle('selected', card.getAttribute('data-service-id') === String(selectedId));
+    });
+
+    const summaryBox = document.getElementById('step1-service-summary');
+    const nameEl = document.getElementById('step1-summary-name');
+    const durEl = document.getElementById('step1-summary-duration');
+    const priceEl = document.getElementById('step1-summary-price');
+
+    if (service && summaryBox) {
+        summaryBox.style.display = 'flex';
+        if (nameEl) nameEl.textContent = service.nombre;
+        if (durEl) durEl.textContent = `⏱️ Duración estimada: ${service.duracion_minutos} minutos`;
+        if (priceEl) priceEl.textContent = `$${parseFloat(service.precio_base).toFixed(2)} MXN`;
+    } else if (summaryBox) {
+        summaryBox.style.display = 'none';
+    }
+
+    updateStep2Summary();
+}
+
+async function loadMaterialsConfigurator() {
+    const grid = document.getElementById('materials-grid');
+    if (!grid) return;
+
+    try {
+        const res = await fetch('/api/materiales');
+        if (!res.ok) throw new Error('Error al cargar inventario');
+        const json = await res.json();
+        loadedMaterials = json.data || [];
+
+        // Limpiar seleccionados que ya no estén disponibles
+        selectedMaterialIds = selectedMaterialIds.filter(id => {
+            const mat = loadedMaterials.find(m => m.id === id);
+            return mat && Number(mat.stock_actual) > 0;
+        });
+
+        renderStockBanner();
+        renderMaterialsGrid();
+        updateStep2Summary();
+    } catch (e) {
+        grid.innerHTML = '<p style="color: var(--color-text-muted); font-size: 0.9rem;">No se pudo cargar el catálogo de materiales en este momento.</p>';
+    }
+}
+
+function renderStockBanner() {
+    const banner = document.getElementById('stock-info-banner');
+    if (!banner) return;
+
+    const outItems = loadedMaterials.filter(m => Number(m.stock_actual) <= 0);
+    const lowItems = loadedMaterials.filter(m => Number(m.stock_actual) > 0 && Number(m.stock_actual) <= Number(m.stock_minimo));
+
+    if (!outItems.length && !lowItems.length) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    const parts = [];
+    if (outItems.length) {
+        parts.push(`<strong>Agotados (${outItems.length}):</strong> ${outItems.map(m => escapeHTML(m.nombre)).join(', ')} (bloqueados temporalmente).`);
+    }
+    if (lowItems.length) {
+        parts.push(`<strong>Últimas unidades (${lowItems.length}):</strong> ${lowItems.map(m => escapeHTML(m.nombre)).join(', ')}.`);
+    }
+    banner.innerHTML = `⚠️ <strong>Aviso de Inventario en Vivo:</strong> ${parts.join(' ')}`;
+    banner.style.display = 'block';
+}
+
+function renderMaterialsGrid() {
+    const grid = document.getElementById('materials-grid');
+    if (!grid) return;
+
+    const filtered = activeMaterialCategory === 'todos'
+        ? loadedMaterials
+        : loadedMaterials.filter(m => m.categoria === activeMaterialCategory);
+
+    if (!filtered.length) {
+        grid.innerHTML = '<p style="color: var(--color-text-muted); font-size: 0.9rem;">No hay materiales en esta categoría.</p>';
+        return;
+    }
+
+    grid.innerHTML = filtered.map(m => {
+        const stock = Number(m.stock_actual);
+        const minStock = Number(m.stock_minimo);
+        const isOut = stock <= 0;
+        const isLow = !isOut && stock <= minStock;
+        const isSelected = selectedMaterialIds.includes(m.id);
+
+        const badgeClass = isOut ? 'out' : (isLow ? 'low' : 'ok');
+        const badgeText = isOut ? 'Agotado' : (isLow ? 'Últimas unidades' : 'Disponible');
+        const extraPrice = Number(m.precio_extra || 0);
+        const priceText = extraPrice > 0 ? `+$${extraPrice.toFixed(2)} MXN` : 'Incluido';
+
+        return `
+            <button type="button"
+                    class="material-card ${isOut ? 'is-out' : ''} ${isSelected ? 'selected' : ''}"
+                    data-material-id="${m.id}"
+                    ${isOut ? 'disabled aria-disabled="true"' : ''}>
+                <div class="material-card-top">
+                    <span class="material-swatch" style="background-color: ${escapeHTML(m.color_hex || '#D4A5A5')};"></span>
+                    <div>
+                        <div class="material-name">${escapeHTML(m.nombre)}</div>
+                        <div style="font-size: 0.74rem; color: var(--color-text-muted);">${escapeHTML(m.categoria)}</div>
+                    </div>
+                </div>
+                <div class="material-meta-row">
+                    <span class="stock-badge ${badgeClass}">${badgeText}</span>
+                    <strong style="color: var(--color-accent-dark);">${priceText}</strong>
+                </div>
+            </button>
+        `;
+    }).join('');
+
+    grid.querySelectorAll('.material-card:not(.is-out)').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = Number(card.getAttribute('data-material-id'));
+            if (selectedMaterialIds.includes(id)) {
+                selectedMaterialIds = selectedMaterialIds.filter(x => x !== id);
+            } else {
+                selectedMaterialIds.push(id);
+            }
+            renderMaterialsGrid();
+            updateStep2Summary();
+        });
+    });
+}
+
+function getCalculatedTotal() {
+    const select = document.getElementById('servicio_id');
+    let base = activeQuoteTotal;
+    if (!base && select && select.selectedOptions[0]) {
+        base = parseFloat(select.selectedOptions[0].getAttribute('data-price')) || 0;
+    }
+    const extras = selectedMaterialIds.reduce((sum, id) => {
+        const m = loadedMaterials.find(x => x.id === id);
+        return sum + (m ? Number(m.precio_extra || 0) : 0);
+    }, 0);
+    return (Number(base || 0) + extras);
+}
+
+function updateStep2Summary() {
+    const select = document.getElementById('servicio_id');
+    const opt = select && select.selectedOptions[0];
+    const serviceNameEl = document.getElementById('step2-service-name');
+    const matCountEl = document.getElementById('step2-materials-count');
+    const totalEl = document.getElementById('step2-total-estimado');
+
+    if (serviceNameEl) {
+        serviceNameEl.textContent = (opt && opt.getAttribute('data-name')) || 'Servicio seleccionado';
+    }
+    if (matCountEl) {
+        matCountEl.textContent = `(${selectedMaterialIds.length} material${selectedMaterialIds.length === 1 ? '' : 'es'} extra)`;
+    }
+    if (totalEl) {
+        totalEl.textContent = `$${getCalculatedTotal().toFixed(2)} MXN`;
     }
 }
 
@@ -202,6 +465,7 @@ function applyPreselectedService() {
     if (select && window._pendingServiceId) {
         select.value = window._pendingServiceId;
     }
+    syncServiceSelectionUI();
 }
 
 /* ----------------------------------------------------------------
@@ -466,11 +730,16 @@ function initAppointmentForm() {
             return;
         }
 
-        // Determinar total estimado
-        let totalEstimado = activeQuoteTotal;
+        // Determinar total estimado (incluyendo extras de materiales)
+        let totalEstimado = getCalculatedTotal();
         if (!totalEstimado && selectServicio.selectedOptions[0]) {
             totalEstimado = parseFloat(selectServicio.selectedOptions[0].getAttribute('data-price')) || 500.00;
         }
+
+        const selectedMaterialsNames = selectedMaterialIds
+            .map(id => loadedMaterials.find(m => m.id === id))
+            .filter(Boolean)
+            .map(m => m.nombre);
 
         let folioTransferencia = null;
         let anticipoRequerido = 50;
@@ -499,6 +768,8 @@ function initAppointmentForm() {
             fecha_cita: fechaCita,
             hora_cita: horaCita,
             notas_diseno: notasDiseno,
+            materiales_ids: selectedMaterialIds,
+            materiales_seleccionados: selectedMaterialsNames,
             total_estimado: totalEstimado,
             metodo_pago: metodoPago,
             anticipo_requerido: anticipoRequerido,
@@ -527,6 +798,9 @@ function initAppointmentForm() {
                 sessionStorage.removeItem('yessy_presupuesto');
             } else {
                 showAlert(result.message || 'No se pudo agendar la cita. Por favor intenta otro horario.', 'error');
+                if (res.status === 409) {
+                    loadMaterialsConfigurator();
+                }
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = 'Confirmar y Solicitar Cita 💅';
             }

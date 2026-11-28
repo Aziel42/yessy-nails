@@ -82,7 +82,7 @@
 
         <div class="container" style="padding-top: 1.5rem;">
             
-            <!-- Barra de Pestañas de Navegación del Panel (4 Pestañas) -->
+            <!-- Barra de Pestañas de Navegación del Panel (5 Pestañas) -->
             <nav class="admin-nav-tabs" role="tablist">
                 <button type="button" class="admin-tab-btn active" data-tab="citas">
                     <span>📅</span> 1. Citas
@@ -90,13 +90,17 @@
                 <button type="button" class="admin-tab-btn" data-tab="servicios-portafolio">
                     <span>💅</span> 2. Servicios y Portafolio
                 </button>
+                <button type="button" class="admin-tab-btn" data-tab="inventario">
+                    <span>🎨</span> 3. Inventario
+                    <span class="admin-tab-badge" id="admin-inventario-tab-badge" style="display: none;">0</span>
+                </button>
                 <button type="button" class="admin-tab-btn" data-tab="pedidos-chat">
-                    <span>🛍️</span> 3. Pedidos y Chat en Vivo
+                    <span>🛍️</span> 4. Pedidos y Chat
                     <span class="admin-tab-badge" id="admin-pedidos-tab-badge" style="display: none;">0</span>
                     <span class="admin-tab-badge admin-tab-badge-chat" id="admin-chat-tab-badge" style="display: none;">0</span>
                 </button>
                 <button type="button" class="admin-tab-btn" data-tab="faqs-config">
-                    <span>⚙️</span> 4. FAQs y Configuración del Estudio
+                    <span>⚙️</span> 5. Estudio, FAQs y Campañas
                 </button>
             </nav>
 
@@ -276,7 +280,105 @@
             </section>
 
             <!-- ========================================================
-                 PESTAÑA 3: PEDIDOS Y CHAT EN VIVO
+                 PESTAÑA 3: INVENTARIO Y MATERIALES
+                 ======================================================== -->
+            <section class="admin-tab-panel" id="tab-panel-inventario">
+
+                <!-- Alertas en rojo/ámbar de stock bajo/agotado -->
+                <div id="inventario-stock-alerts"></div>
+
+                <!-- Formulario para agregar nuevos insumos -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>🎨 Agregar Nuevo Material o Tono</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Registra barnices, acrílicos, tips o decoración para el configurador de citas.</p>
+                        </div>
+                    </div>
+
+                    <div id="inventario-form-alert" style="display: none; padding: 0.9rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;"></div>
+
+                    <form id="admin-material-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="mat-nombre">Nombre del Material *</label>
+                                <input type="text" id="mat-nombre" name="nombre" class="form-control" placeholder="Ej. Gelish Lila Pastel #08" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mat-categoria">Categoría *</label>
+                                <select id="mat-categoria" name="categoria" class="form-control" required>
+                                    <option value="Barniz">Barniz</option>
+                                    <option value="Acrílico">Acrílico</option>
+                                    <option value="Tip">Tip</option>
+                                    <option value="Decoración">Decoración</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mat-color">Color (Hex)</label>
+                                <input type="color" id="mat-color" name="color_hex" class="form-control" value="#D4A5A5" style="height: 44px; padding: 0.25rem;">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="mat-stock">Stock Actual *</label>
+                                <input type="number" id="mat-stock" name="stock_actual" class="form-control" value="10" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mat-minimo">Stock Mínimo (Alerta)</label>
+                                <input type="number" id="mat-minimo" name="stock_minimo" class="form-control" value="3" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mat-consumo">Consumo por Cita</label>
+                                <input type="number" id="mat-consumo" name="consumo_por_cita" class="form-control" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="mat-precio">Precio Extra (MXN)</label>
+                                <input type="number" step="0.50" id="mat-precio" name="precio_extra" class="form-control" value="0" min="0">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-save-material">
+                            + Agregar Insumo al Inventario 🎨
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tabla de Inventario con indicadores y botón rápido +5 Reabastecer -->
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <div>
+                            <h3>📦 Control de Stock en Tiempo Real</h3>
+                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Los materiales se descuentan automáticamente al agendar citas y regresan si se cancelan.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="ADMIN_APP.loadMaterials()">🔄 Actualizar Stock</button>
+                    </div>
+
+                    <div class="admin-table-responsive">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Material & Color</th>
+                                    <th>Categoría</th>
+                                    <th>Stock Actual</th>
+                                    <th>Mínimo</th>
+                                    <th>Consumo/Cita</th>
+                                    <th>Precio Extra</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materials-table-body">
+                                <tr><td colspan="8" style="text-align: center;">Cargando inventario...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- ========================================================
+                 PESTAÑA 4: PEDIDOS Y CHAT EN VIVO
                  ======================================================== -->
             <section class="admin-tab-panel" id="tab-panel-pedidos-chat">
 
@@ -408,232 +510,214 @@
             </section>
 
             <!-- ========================================================
-                 PESTAÑA 4: FAQs Y CONFIGURACIÓN DEL ESTUDIO
+                 PESTAÑA 5: ESTUDIO, FAQs Y CAMPAÑAS (2 COLUMNAS COMPACTAS)
                  ======================================================== -->
             <section class="admin-tab-panel" id="tab-panel-faqs-config">
-                <!-- Gestión de Preguntas Frecuentes (FAQs) -->
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>❓ Preguntas Frecuentes (FAQs)</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Crea o elimina las preguntas que se muestran en el acordeón de la página principal.</p>
+                <div class="admin-two-col-grid">
+
+                    <!-- COLUMNA IZQUIERDA: Personalización del Sitio Web, Banner, Bio y SPEI -->
+                    <div class="admin-card admin-card-compact">
+                        <div class="admin-card-header">
+                            <div>
+                                <h3>⚙️ Sitio Web, Banner, Bio & SPEI</h3>
+                                <p style="color: var(--color-text-muted); font-size: 0.88rem;">Modifica textos, banner, mapa y datos bancarios en tiempo real.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div id="faqs-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
+                        <!-- Alerta de Respuesta -->
+                        <div id="config-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
 
-                    <form id="admin-faq-form" style="margin-bottom: 2rem;">
-                        <div class="form-row">
+                        <!-- Vista previa en vivo del banner (degradado elegante por defecto) -->
+                        <div class="banner-preview-box" style="margin-bottom: 1.5rem; border-radius: var(--radius-md); overflow: hidden; height: 150px; position: relative; border: 1.5px solid var(--color-border);">
+                            <img src="" id="banner-preview-img" class="banner-preview-img" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" alt="Preview del Banner" onerror="this.classList.add('is-hidden')">
+                            <div style="position: absolute; inset: 0; background: rgba(74,63,63,0.25); display: flex; align-items: center; justify-content: center; color: white; pointer-events: none;">
+                                <span style="background: rgba(74,63,63,0.65); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Vista Previa del Banner</span>
+                            </div>
+                        </div>
+
+                        <form id="admin-config-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_titulo_banner">Título Principal del Banner *</label>
+                                    <input type="text" id="cfg_titulo_banner" name="titulo_banner" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_telefono_whatsapp">WhatsApp (con código de país) *</label>
+                                    <input type="text" id="cfg_telefono_whatsapp" name="telefono_whatsapp" class="form-control" placeholder="+5215587431290" required>
+                                </div>
+                            </div>
+
                             <div class="form-group">
-                                <label class="form-label" for="faq-pregunta">Pregunta *</label>
-                                <input type="text" id="faq-pregunta" name="pregunta" class="form-control" placeholder="Ej. ¿Cuál es el tiempo de duración de las uñas acrílicas?" required>
+                                <label class="form-label" for="cfg_subtitulo_banner">Subtítulo / Eslogan del Salón</label>
+                                <input type="text" id="cfg_subtitulo_banner" name="subtitulo_banner" class="form-control">
                             </div>
+
                             <div class="form-group">
-                                <label class="form-label" for="faq-orden">Orden de aparición</label>
-                                <input type="number" id="faq-orden" name="orden" class="form-control" value="0" min="0">
+                                <label class="form-label" for="cfg_imagen_banner_url">Imagen de Fondo del Banner</label>
+                                <input type="url" id="cfg_imagen_banner_url" name="imagen_banner_url" class="form-control" placeholder="https://... (o sube un archivo abajo)">
+                                <input type="file" id="cfg_banner_file" class="form-control" accept="image/*" style="margin-top: 0.5rem;" onchange="ADMIN_APP.handleImageUpload(event, 'imagen_banner_url', 'banner-preview-img')">
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="faq-respuesta">Respuesta *</label>
-                            <textarea id="faq-respuesta" name="respuesta" class="form-control" rows="3" placeholder="Escribe la respuesta clara y amable para tus clientas..." required></textarea>
-                        </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_horario_atencion">Horarios de Atención</label>
+                                    <input type="text" id="cfg_horario_atencion" name="horario_atencion" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_anos_experiencia">Años de Experiencia</label>
+                                    <input type="number" id="cfg_anos_experiencia" name="anos_experiencia" class="form-control" min="1" max="50">
+                                </div>
+                            </div>
 
-                        <button type="submit" class="btn btn-primary" id="btn-save-faq">
-                            + Agregar Pregunta Frecuente ✨
-                        </button>
-                    </form>
-
-                    <div class="admin-table-responsive">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Orden</th>
-                                    <th>Pregunta</th>
-                                    <th>Respuesta</th>
-                                    <th style="width: 130px;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="faqs-table-body">
-                                <tr><td colspan="4" style="text-align: center;">Cargando preguntas frecuentes...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Personalizar Sitio Web & Hero Banner (PUT /api/config) -->
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>⚙️ Personalizar Sitio Web & Hero Banner</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Modifica textos, teléfonos, horarios y banners en tiempo real sin tocar código.</p>
-                        </div>
-                    </div>
-
-                    <!-- Alerta de Respuesta -->
-                    <div id="config-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
-
-                    <!-- Vista previa en vivo del banner (degradado elegante por defecto) -->
-                    <div class="banner-preview-box" style="margin-bottom: 2rem; border-radius: var(--radius-md); overflow: hidden; height: 180px; position: relative; border: 1.5px solid var(--color-border);">
-                        <img src="" id="banner-preview-img" class="banner-preview-img" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.9;" alt="Preview del Banner" onerror="this.classList.add('is-hidden')">
-                        <div style="position: absolute; inset: 0; background: rgba(74,63,63,0.25); display: flex; align-items: center; justify-content: center; color: white; pointer-events: none;">
-                            <span style="background: rgba(74,63,63,0.65); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Vista Previa del Banner</span>
-                        </div>
-                    </div>
-
-                    <form id="admin-config-form">
-                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label" for="cfg_titulo_banner">Título Principal del Banner *</label>
-                                <input type="text" id="cfg_titulo_banner" name="titulo_banner" class="form-control" required>
+                                <label class="form-label" for="cfg_direccion_texto">Dirección Física del Estudio</label>
+                                <input type="text" id="cfg_direccion_texto" name="direccion_texto" class="form-control">
                             </div>
+
                             <div class="form-group">
-                                <label class="form-label" for="cfg_telefono_whatsapp">Teléfono de WhatsApp (con código de país) *</label>
-                                <input type="text" id="cfg_telefono_whatsapp" name="telefono_whatsapp" class="form-control" placeholder="+5215587431290" required>
+                                <label class="form-label" for="cfg_bio_yessica">Biografía / Presentación de Yessica</label>
+                                <textarea id="cfg_bio_yessica" name="bio_yessica" class="form-control" rows="3"></textarea>
                             </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="cfg_subtitulo_banner">Subtítulo / Eslogan del Salón</label>
-                            <input type="text" id="cfg_subtitulo_banner" name="subtitulo_banner" class="form-control">
-                        </div>
+                            <!-- Promoción mensual destacada en el sitio -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_promo_mes_titulo">Título Promoción del Mes</label>
+                                    <input type="text" id="cfg_promo_mes_titulo" name="promo_mes_titulo" class="form-control" placeholder="Promoción de Diciembre">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_promo_mes_texto">Texto de la Promoción</label>
+                                    <input type="text" id="cfg_promo_mes_texto" name="promo_mes_texto" class="form-control" placeholder="Uñas acrílicas desde $250 MXN">
+                                </div>
+                            </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="cfg_imagen_banner_url">Imagen de Fondo del Banner</label>
-                            <input type="url" id="cfg_imagen_banner_url" name="imagen_banner_url" class="form-control" placeholder="https://... (o sube un archivo abajo)">
-                            <input type="file" id="cfg_banner_file" class="form-control" accept="image/*" style="margin-top: 0.5rem;" onchange="ADMIN_APP.handleImageUpload(event, 'imagen_banner_url', 'banner-preview-img')">
-                            <small style="color: var(--color-text-muted); display: block; margin-top: 0.35rem;">Sube un archivo desde tu equipo o pega una URL externa. Formatos: JPG, PNG, WebP, GIF (máx. 10 MB).</small>
-                        </div>
+                            <!-- Coordenadas para el mapa (Leaflet + OpenStreetMap) -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_latitud">Latitud (mapa)</label>
+                                    <input type="number" step="0.0000001" id="cfg_latitud" name="latitud" class="form-control" placeholder="19.5855000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_longitud">Longitud (mapa)</label>
+                                    <input type="number" step="0.0000001" id="cfg_longitud" name="longitud" class="form-control" placeholder="-99.0195000">
+                                </div>
+                            </div>
 
-                        <div class="form-row">
+                            <!-- Datos de transferencia SPEI -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_banco_transferencia">Banco (SPEI)</label>
+                                    <input type="text" id="cfg_banco_transferencia" name="banco_transferencia" class="form-control" placeholder="Banco de Ejemplo">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="cfg_titular_transferencia">Titular de la Cuenta</label>
+                                    <input type="text" id="cfg_titular_transferencia" name="titular_transferencia" class="form-control" placeholder="Nombre de la Titular">
+                                </div>
+                            </div>
+
                             <div class="form-group">
-                                <label class="form-label" for="cfg_horario_atencion">Horarios de Atención</label>
-                                <input type="text" id="cfg_horario_atencion" name="horario_atencion" class="form-control">
+                                <label class="form-label" for="cfg_clabe_transferencia">CLABE Interbancaria (18 dígitos)</label>
+                                <input type="text" id="cfg_clabe_transferencia" name="clabe_transferencia" class="form-control" maxlength="18" placeholder="000000000000000000">
+                                <small class="form-help">⚠️ Por seguridad no escribas cuentas reales en el código.</small>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_anos_experiencia">Años de Experiencia</label>
-                                <input type="number" id="cfg_anos_experiencia" name="anos_experiencia" class="form-control" min="1" max="50">
-                            </div>
-                        </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="cfg_direccion_texto">Dirección Física del Estudio</label>
-                            <input type="text" id="cfg_direccion_texto" name="direccion_texto" class="form-control">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="cfg_bio_yessica">Biografía / Presentación de Yessica</label>
-                            <textarea id="cfg_bio_yessica" name="bio_yessica" class="form-control" rows="4"></textarea>
-                        </div>
-
-                        <!-- Promoción mensual destacada en el sitio -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_promo_mes_titulo">Título de la Promoción del Mes</label>
-                                <input type="text" id="cfg_promo_mes_titulo" name="promo_mes_titulo" class="form-control" placeholder="Promoción de Diciembre">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_promo_mes_texto">Texto de la Promoción</label>
-                                <input type="text" id="cfg_promo_mes_texto" name="promo_mes_texto" class="form-control" placeholder="Uñas acrílicas desde $250 MXN, de 1 a 3 tonos hasta el número 3.">
-                            </div>
-                        </div>
-
-                        <!-- Coordenadas para el mapa (Leaflet + OpenStreetMap) -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_latitud">Latitud (mapa)</label>
-                                <input type="number" step="0.0000001" id="cfg_latitud" name="latitud" class="form-control" placeholder="19.5855000">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_longitud">Longitud (mapa)</label>
-                                <input type="number" step="0.0000001" id="cfg_longitud" name="longitud" class="form-control" placeholder="-99.0195000">
-                            </div>
-                        </div>
-
-                        <!-- Datos de transferencia (dejar en blanco o genéricos por seguridad) -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_banco_transferencia">Banco (Transferencia)</label>
-                                <input type="text" id="cfg_banco_transferencia" name="banco_transferencia" class="form-control" placeholder="Banco de Ejemplo">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="cfg_titular_transferencia">Titular de la Cuenta</label>
-                                <input type="text" id="cfg_titular_transferencia" name="titular_transferencia" class="form-control" placeholder="Nombre de la Titular">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="cfg_clabe_transferencia">CLABE Interbancaria (18 dígitos)</label>
-                            <input type="text" id="cfg_clabe_transferencia" name="clabe_transferencia" class="form-control" maxlength="18" placeholder="000000000000000000">
-                            <small class="form-help">⚠️ Por seguridad no escribas cuentas reales en el código. Edítalas aquí solo cuando lo necesites.</small>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary" id="btn-save-config">
-                            Guardar Cambios del Sitio ✨
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Enviar Oferta por Correo -->
-                <div class="admin-card">
-                    <div class="admin-card-header">
-                        <div>
-                            <h3>✉️ Enviar Oferta por Correo</h3>
-                            <p style="color: var(--color-text-muted); font-size: 0.92rem;">Redacta una promoción y envíala a todas las clientas con <strong>acepta_promociones = true</strong>.</p>
-                        </div>
-                    </div>
-
-                    <div id="ofertas-alert" style="display: none; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;"></div>
-
-                    <!-- Resumen de destinatarias -->
-                    <div style="background: var(--color-accent-light); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                        <span>📋 Destinatarias registradas con suscripción activa: </span>
-                        <strong id="ofertas-subscriber-count" style="color: var(--color-accent-dark);">calculando…</strong>
-                        <span style="color: var(--color-text-muted); font-size: 0.82rem; display: block; margin-top: 0.3rem;">
-                            Solo se envía a clientas que marcaron "acepta promociones" al registrarse. Respeta la privacidad de tu base de datos.
-                        </span>
-                    </div>
-
-                    <form id="offer-email-form" novalidate>
-
-                        <div class="form-group">
-                            <label class="form-label" for="offer-asunto">Asunto del Correo *</label>
-                            <input type="text" id="offer-asunto" class="form-control"
-                                   placeholder="Ej. ✨ Promoción de Enero — Yessy Nails" required>
-                            <small style="color: var(--color-text-muted); font-size: 0.82rem;">
-                                Si lo dejas vacío se usará el asunto por defecto: "✨ Promoción del mes — Yessy Nails".
-                            </small>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="offer-mensaje">Mensaje de la Promoción *</label>
-                            <textarea id="offer-mensaje" class="form-control" rows="7" required
-                                      placeholder="Ej. ¡Hola! 💕 Este mes tenemos una oferta increíble: Uñas acrílicas con diseño desde $250 MXN.&#10;&#10;Agenda antes del 31 de enero y recibe un regalo sorpresa. ¡Te esperamos! ✨"></textarea>
-                            <small style="color: var(--color-text-muted); font-size: 0.82rem;">
-                                Puedes usar saltos de línea. El nombre de cada clienta se agrega automáticamente al inicio del correo.
-                            </small>
-                        </div>
-
-                        <!-- Vista previa del asunto -->
-                        <div style="background: #F9F5F3; border: 1.5px solid var(--color-border); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.88rem;">
-                            <strong style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">Vista previa del encabezado</strong>
-                            <div style="margin-top: 0.5rem;">
-                                <span style="font-weight: 700;">Asunto:</span> <span id="offer-preview-subject">—</span>
-                            </div>
-                            <div style="margin-top: 0.3rem; white-space: pre-line; color: var(--color-text-muted);">
-                                <span style="font-weight: 700;">Mensaje:</span> <span id="offer-preview-body">—</span>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                            <button type="submit" class="btn btn-primary" id="btn-send-offer">
-                                ✉️ Enviar Oferta a Todas las Clientas
+                            <button type="submit" class="btn btn-primary" id="btn-save-config" style="width: 100%;">
+                                Guardar Cambios del Sitio ✨
                             </button>
-                            <span style="font-size: 0.82rem; color: var(--color-text-muted);">
-                                ⚠️ Esta acción no se puede deshacer. Revisa el mensaje antes de enviar.
-                            </span>
+                        </form>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: Preguntas Frecuentes (FAQs) y Campañas Brevo -->
+                    <div class="admin-two-col-stack">
+                        <!-- Gestión de Preguntas Frecuentes (FAQs) -->
+                        <div class="admin-card admin-card-compact">
+                            <div class="admin-card-header">
+                                <div>
+                                    <h3>❓ Preguntas Frecuentes (FAQs)</h3>
+                                    <p style="color: var(--color-text-muted); font-size: 0.88rem;">Crea o elimina las preguntas del acordeón principal.</p>
+                                </div>
+                            </div>
+
+                            <div id="faqs-alert" style="display: none; padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem;"></div>
+
+                            <form id="admin-faq-form" style="margin-bottom: 1.5rem;">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label" for="faq-pregunta">Pregunta *</label>
+                                        <input type="text" id="faq-pregunta" name="pregunta" class="form-control" placeholder="Ej. ¿Cuánto duran las uñas acrílicas?" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="faq-orden">Orden</label>
+                                        <input type="number" id="faq-orden" name="orden" class="form-control" value="0" min="0">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="faq-respuesta">Respuesta *</label>
+                                    <textarea id="faq-respuesta" name="respuesta" class="form-control" rows="2" placeholder="Respuesta clara para tus clientas..." required></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-sm" id="btn-save-faq">
+                                    + Agregar FAQ ✨
+                                </button>
+                            </form>
+
+                            <div class="admin-table-responsive">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">Orden</th>
+                                            <th>Pregunta</th>
+                                            <th>Respuesta</th>
+                                            <th style="width: 100px;">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="faqs-table-body">
+                                        <tr><td colspan="4" style="text-align: center;">Cargando preguntas frecuentes...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </form>
+
+                        <!-- Enviar Oferta por Correo (Campañas Brevo) -->
+                        <div class="admin-card admin-card-compact">
+                            <div class="admin-card-header">
+                                <div>
+                                    <h3>✉️ Campañas Brevo — Ofertas por Correo</h3>
+                                    <p style="color: var(--color-text-muted); font-size: 0.88rem;">Envía promociones a clientas con <strong>acepta_promociones = true</strong>.</p>
+                                </div>
+                            </div>
+
+                            <div id="ofertas-alert" style="display: none; padding: 0.85rem; border-radius: var(--radius-md); margin-bottom: 1rem;"></div>
+
+                            <div style="background: var(--color-accent-light); border-radius: var(--radius-md); padding: 0.85rem 1rem; margin-bottom: 1rem; font-size: 0.86rem;">
+                                <span>📋 Suscriptoras activas: </span>
+                                <strong id="ofertas-subscriber-count" style="color: var(--color-accent-dark);">calculando…</strong>
+                            </div>
+
+                            <form id="offer-email-form" novalidate>
+                                <div class="form-group">
+                                    <label class="form-label" for="offer-asunto">Asunto del Correo *</label>
+                                    <input type="text" id="offer-asunto" class="form-control" placeholder="Ej. ✨ Promoción de Enero — Yessy Nails" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="offer-mensaje">Mensaje de la Promoción *</label>
+                                    <textarea id="offer-mensaje" class="form-control" rows="5" required placeholder="¡Hola! 💕 Este mes tenemos una oferta especial..."></textarea>
+                                </div>
+
+                                <div style="background: #F9F5F3; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.82rem;">
+                                    <div><strong>Asunto:</strong> <span id="offer-preview-subject">—</span></div>
+                                    <div style="margin-top: 0.25rem; white-space: pre-line; color: var(--color-text-muted);"><strong>Mensaje:</strong> <span id="offer-preview-body">—</span></div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary" id="btn-send-offer" style="width: 100%;">
+                                    ✉️ Enviar Oferta a Todas las Clientas
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 

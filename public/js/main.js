@@ -379,10 +379,12 @@ function initAuthNav() {
 
     const session = window.YESSY_AUTH ? window.YESSY_AUTH.getSession() : null;
     if (session && session.user && session.user.email) {
-        const email = session.user.email;
+        const displayName = (typeof window.YESSY_AUTH.getDisplayName === 'function')
+            ? window.YESSY_AUTH.getDisplayName()
+            : session.user.email.split('@')[0];
         container.innerHTML = `
-            <span class="auth-user-email" title="${escapeHTML(email)}">👤 ${escapeHTML(email)}</span>
-            <button type="button" class="btn btn-secondary btn-sm" id="btn-nav-logout">Cerrar Sesión</button>
+            <span class="auth-user-email" title="${escapeHTML(session.user.email)}">👤 ${escapeHTML(displayName)}</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-nav-logout">Salir</button>
         `;
         const logoutBtn = document.getElementById('btn-nav-logout');
         if (logoutBtn) {
@@ -391,7 +393,7 @@ function initAuthNav() {
             });
         }
     } else {
-        container.innerHTML = `<a href="login.html" class="btn btn-secondary btn-sm" id="btn-nav-login">Iniciar Sesión / Registrarse</a>`;
+        container.innerHTML = `<a href="login.html" class="btn btn-secondary btn-sm" id="btn-nav-login">Entrar</a>`;
     }
 }
 

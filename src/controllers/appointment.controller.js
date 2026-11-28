@@ -7,6 +7,7 @@ import * as AppointmentModel from '../models/appointment.model.js';
 import * as ServiceModel from '../models/service.model.js';
 import * as ClienteModel from '../models/cliente.model.js';
 import * as ConfigModel from '../models/config.model.js';
+import * as MaterialModel from '../models/material.model.js';
 import * as EmailService from '../services/email.service.js';
 import { successResponse, errorResponse } from '../utils/response.js';
 import { sanitizeStr, isValidEmail, safeInt } from '../utils/sanitize.js';
@@ -34,6 +35,11 @@ async function runAutoCancel() {
                 .filter(c => c.correo_cliente)
                 .map(c => enviarCorreoCancelacion(c, motivo))
         );
+
+        // Devolver stock de materiales de las citas auto-canceladas
+        for (const c of citasCanceladas) {
+            await restoreAppointmentMaterials(c.materiales_ids);
+        }
 
         return { activo: true, canceladas: citasCanceladas.length };
     } catch (e) {
@@ -180,6 +186,29 @@ export async function create(req, res) {
             return errorResponse(res, 'No puedes agendar una cita en una fecha pasada.', 400);
         }
 
+        // Validar stock de materiales seleccionados (si aplica)
+        const rawMaterialIds = Array.isArray(req.body.materiales_ids) ? req.body.materiales_ids : [];
+        const materialIds = [...new Set(rawMaterialIds.map(id => Number(id)).filter(n => Number.isFinite(n) && n > 0))];
+        const selectedMaterials = [];
+        let extrasTotal = 0;
+
+        for (const matId of materialIds) {
+            const mat = await MaterialModel.getMaterialById(matId);
+            if (!mat) {
+                return errorResponse(res, `El material #${matId} no existe.`, 404);
+            }
+            const consumo = Math.max(1, Number(mat.consumo_por_cita || 1));
+            if (Number(mat.stock_actual) <= 0 || Number(mat.stock_actual) < consumo) {
+                return errorResponse(res, `El material "${mat.nombre}" se encuentra agotado o sin stock suficiente.`, 409);
+            }
+            selectedMaterials.push(mat);
+            extrasTotal += Number(mat.precio_extra || 0);
+        }
+
+        const materialesSeleccionados = Array.isArray(req.body.materiales_seleccionados)
+            ? req.body.materiales_seleccionados.map(m => sanitizeStr(String(m))).filter(Boolean)
+            : selectedMaterials.map(m => m.nombre);
+
         // Normalizar método de pago y anticipo:
         // 'sucursal' se normaliza a 'efectivo' para cumplir el CHECK de la tabla citas.
         const folio = sanitizeStr(req.body.folio_transferencia);
@@ -197,6 +226,13 @@ export async function create(req, res) {
             folioFinal = folio ? `Anticipo vía transferencia (${folio})` : 'Anticipo vía transferencia';
         }
 
+        const notasBase = sanitizeStr(req.body.notas_diseno);
+        const notasConMateriales = materialesSeleccionados.length > 0 && !notasBase.includes('Materiales:')
+            ? `${notasBase ? notasBase + '\n' : ''}Materiales: ${materialesSeleccionados.join(', ')}`
+            : notasBase;
+
+        const totalCalculado = Number(servicio.precio_base || 0) + extrasTotal;
+
         const data = {
             ...req.body,
             nombre_cliente,
@@ -205,11 +241,14 @@ export async function create(req, res) {
             fecha_cita,
             hora_cita,
             servicio_id,
+            notas_diseno: notasConMateriales,
+            materiales_ids: materialIds.length > 0 ? materialIds : null,
+            materiales_seleccionados: materialesSeleccionados.length > 0 ? materialesSeleccionados : null,
             metodo_pago: metodoPago,
             folio_transferencia: folioFinal,
             anticipo_requerido: esPagoEnSucursal ? 0 : (req.body.anticipo_requerido != null ? req.body.anticipo_requerido : 50),
             estado_pago: 'pendiente',
-            total_estimado: req.body.total_estimado || servicio.precio_base
+            total_estimado: req.body.total_estimado != null ? Number(req.body.total_estimado) : totalCalculado
         };
 
         // Registro ligero de la clienta (sin contraseña), si dejó correo.
@@ -229,6 +268,21 @@ export async function create(req, res) {
         }
 
         const nueva = await AppointmentModel.createAppointment(data);
+
+        // Descontar consumo_por_cita de cada material y alertar si queda bajo o agotado
+        if (selectedMaterials.length > 0) {
+            const lowStockAlerts = [];
+            for (const mat of selectedMaterials) {
+                const consumo = Math.max(1, Number(mat.consumo_por_cita || 1));
+                const updatedMat = await MaterialModel.adjustMaterialStock(mat.id, -consumo);
+                if (updatedMat && (updatedMat.stock_actual <= updatedMat.stock_minimo || updatedMat.stock_actual <= 0)) {
+                    lowStockAlerts.push(updatedMat);
+                }
+            }
+            if (lowStockAlerts.length > 0) {
+                enviarAlertaStockBajo(lowStockAlerts).catch(() => {});
+            }
+        }
 
         // Correos automáticos (no bloquean la respuesta si fallan)
         enviarCorreosNuevaCita(nueva, servicio.nombre).catch(() => {});
@@ -271,9 +325,10 @@ export async function update(req, res) {
 
         const updated = await AppointmentModel.updateAppointment(Number(id), cambios);
 
-        // Correo de cancelación si cambió a 'cancelada'
+        // Correo de cancelación y devolución de stock si cambió a 'cancelada'
         if (cambios.estado_cita === 'cancelada' && existing.estado_cita !== 'cancelada') {
             enviarCorreoCancelacion(existing, cambios.notas_diseno).catch(() => {});
+            await restoreAppointmentMaterials(existing.materiales_ids);
         }
 
         return successResponse(res, updated, 'Cita actualizada correctamente.');
@@ -330,6 +385,40 @@ async function enviarCorreoCancelacion(cita, motivo) {
         await EmailService.sendEmail({ to: cita.correo_cliente, subject, html });
     } catch (e) {
         console.warn('⚠️  Error enviando correo de cancelación:', e.message);
+    }
+}
+
+/**
+ * Envía alerta al administrador cuando un material llega a stock_minimo o 0.
+ */
+async function enviarAlertaStockBajo(materialesAlerta) {
+    try {
+        const adminTo = EmailService.getAdminEmail();
+        if (!adminTo || !materialesAlerta.length) return;
+        const { subject, html } = EmailService.buildLowStockAdminEmail(materialesAlerta);
+        await EmailService.sendEmail({ to: adminTo, subject, html });
+    } catch (e) {
+        console.warn('⚠️  Error enviando alerta de stock bajo:', e.message);
+    }
+}
+
+/**
+ * Devuelve al inventario los materiales usados por una cita cancelada.
+ */
+async function restoreAppointmentMaterials(materialesIds) {
+    if (!Array.isArray(materialesIds) || materialesIds.length === 0) return;
+    for (const rawId of materialesIds) {
+        const matId = Number(rawId);
+        if (!Number.isFinite(matId) || matId <= 0) continue;
+        try {
+            const mat = await MaterialModel.getMaterialById(matId);
+            if (mat) {
+                const consumo = Math.max(1, Number(mat.consumo_por_cita || 1));
+                await MaterialModel.adjustMaterialStock(matId, consumo);
+            }
+        } catch (e) {
+            console.warn(`⚠️  No se pudo devolver stock del material #${matId}:`, e.message);
+        }
     }
 }
 

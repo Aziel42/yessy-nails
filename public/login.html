@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Inscripción y inicio de sesión en Yessy Nails — Salón de uñas de Yessica Marlen Calderón Luna.">
-    <title>Iniciar Sesión / Registrarse — Yessy Nails</title>
+    <meta name="description" content="Inicia sesión o crea tu cuenta en Yessy Nails — Salón de uñas de Yessica Marlen Calderón Luna.">
+    <title>Iniciar Sesión / Crear Cuenta — Yessy Nails</title>
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Iniciar Sesión / Registrar — Yessy Nails">
-    <meta property="og:description" content="Registrarse con email y contraseña o conectar con Google para acceder a la agenda.">
+    <meta property="og:title" content="Iniciar Sesión / Crear Cuenta — Yessy Nails">
+    <meta property="og:description" content="Inicia sesión con correo o Google para agendar citas, hacer pedidos y chatear en vivo.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://yessyNails.com/login.html">
     <meta property="og:image" content="https://yessyNails.com/img/yessica.jpg">
@@ -20,11 +20,187 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Supabase Client (publico) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Hoja de estilos principal -->
+    <link rel="stylesheet" href="styles.css">
 
-    <!-- Autenticación local del cliente -->
+    <!-- Supabase Client (público) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="js/client-auth.js"></script>
+
+    <style>
+        .auth-page-main {
+            min-height: calc(100vh - var(--header-height));
+            padding: calc(var(--header-height) + 2.5rem) 1.25rem 4rem;
+            background: linear-gradient(135deg, #FAF2EC 0%, #FFFAF5 50%, #F7EAEA 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 460px;
+            background: #FFFFFF;
+            border: 1.5px solid var(--color-border-gold);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 50px rgba(74, 63, 63, 0.1);
+            padding: 2.5rem 2.25rem;
+        }
+
+        .auth-card-header {
+            text-align: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .auth-card-badge {
+            display: inline-block;
+            background: var(--color-primary-light);
+            color: var(--color-primary-dark);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.3rem 0.9rem;
+            border-radius: var(--radius-full);
+            margin-bottom: 0.75rem;
+        }
+
+        .auth-card-header h1 {
+            font-size: 1.85rem;
+            margin-bottom: 0.4rem;
+            color: var(--color-text);
+        }
+
+        .auth-card-header p {
+            font-size: 0.9rem;
+            color: var(--color-text-muted);
+        }
+
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.45rem;
+            background: #FAF2EC;
+            padding: 0.35rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--color-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-tab-btn {
+            padding: 0.65rem 1rem;
+            border-radius: var(--radius-full);
+            background: transparent;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .auth-tab-btn.active {
+            background: #FFFFFF;
+            color: var(--color-accent-dark);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 0;
+        }
+
+        .auth-form .form-label {
+            display: block;
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-alert {
+            display: none;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            margin-bottom: 1.1rem;
+            line-height: 1.45;
+        }
+
+        .auth-alert.error {
+            background: #FFEBEE;
+            color: #C62828;
+            border: 1px solid #FFCDD2;
+        }
+
+        .auth-alert.success {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #A5D6A7;
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.35rem 0;
+            color: var(--color-text-light);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .btn-google {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+            padding: 0.82rem 1.25rem;
+            border-radius: var(--radius-full);
+            background: #FFFFFF;
+            color: var(--color-text);
+            border: 1.5px solid var(--color-border);
+            font-weight: 600;
+            font-size: 0.94rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-google:hover {
+            border-color: var(--color-accent);
+            background: #FFFAF5;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .auth-footer-note {
+            margin-top: 1.35rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        @media (max-width: 520px) {
+            .auth-card {
+                padding: 2rem 1.35rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
@@ -34,10 +210,9 @@
                 Yessy <span>Nails</span>
             </a>
 
-            <!-- Navegación -->
             <nav class="main-nav" aria-label="Navegación principal">
                 <ul class="nav-links">
-                    <li><a href="index.html" class="nav-link active">Inicio</a></li>
+                    <li><a href="index.html" class="nav-link">Inicio</a></li>
                     <li><a href="servicios.html" class="nav-link">Servicios y Costos</a></li>
                     <li><a href="portafolio.html" class="nav-link">Portafolio</a></li>
                     <li><a href="perfil.html" class="nav-link">Sobre Yessy</a></li>
@@ -51,7 +226,6 @@
                 </div>
             </nav>
 
-            <!-- Botón Hamburguesa Móvil -->
             <button class="menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
                 <span></span>
                 <span></span>
@@ -60,64 +234,193 @@
         </div>
     </header>
 
-    <main>
-
-        <!-- ============================================================
-             INSCRIBUCIÓN LIGERA: "RECIBE NUESTRAS PROMOCIONES DEL MES"
-             ============================================================ -->
-        <section class="promo-subscribe-section" id="subscribe-block">
-            <div style="max-width: 540px; margin: 0 auto; text-align: center;">
-                <span class="section-tag">Suscríbete gratis</span>
-                <h2 style="margin: 0.5rem 0 0.75rem; font-size: 1.7rem;">Recibe nuestras promociones del mes 💅</h2>
-                <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 1.75rem;">
-                    Déjanos tu nombre y correo y te avisaremos de ofertas exclusivas antes que nadie. Sin spam, solo lo bueno.
-                </p>
-
-                <div id="subscribe-alert" style="display:none; padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.92rem;"></div>
-
-                <form id="subscribe-form" novalidate style="display: flex; flex-direction: column; gap: 0.85rem;">
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                        <input type="text" id="sub-nombre" name="nombre" class="form-control" placeholder="Tu nombre" required style="flex: 1 1 160px; min-width: 160px;">
-                        <input type="email" id="sub-correo" name="correo" class="form-control" placeholder="tu@correo.com" required style="flex: 2 1 200px; min-width: 200px;">
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="btn-subscribe" style="width: 100%; font-size: 1rem; padding: 0.9rem;">
-                        ✨ Suscribirme a las Promociones
-                    </button>
-                    <p style="font-size: 0.78rem; color: var(--color-text-muted); margin: 0;">
-                        Puedes darte de baja en cualquier momento escribiéndonos. No compartimos tus datos.
-                    </p>
-                </form>
-            </div>
-        </section>
-
-        <!-- ============================================================
-              FORMULARIO DE INSCRIBUCIÓN / REGISTRO
-              ============================================================ -->
-        <section class="login-form-section">
-            <div class="container">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="login-email">Correo electrónico *</label>
-                        <input type="email" id="login-email" name="email" class="form-control" placeholder="ejemplo@correo.com" required autocomplete="email">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="login-password">Contraseña *</label>
-                        <input type="password" id="login-password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-                    </div>
-                </div>
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label" for="login-confirm-password">Confirmar contraseña</label>
-                    <input type="password" id="login-confirm-password" name="password_confirm" class="form-control" placeholder="Repetir contraseña" required autocomplete="new-password">
-                </div>
+    <main class="auth-page-main">
+        <section class="auth-card" aria-label="Acceso de clientas">
+            <div class="auth-card-header">
+                <span class="auth-card-badge">Bienvenida a Yessy Nails</span>
+                <h1 id="auth-heading">Iniciar Sesión</h1>
+                <p id="auth-subheading">Accede para agendar tu cita, hacer pedidos o chatear con Yessica.</p>
             </div>
 
-            <div id="login-error-alert" style="display: none; padding: 0.85rem; border-radius: var(--radius-md); background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; margin-bottom: 1.5rem; font-size: 0.9rem;"></div>
-        </section>
+            <div class="auth-tabs" role="tablist">
+                <button type="button" class="auth-tab-btn active" id="tab-btn-login" role="tab" aria-selected="true">
+                    Iniciar Sesión
+                </button>
+                <button type="button" class="auth-tab-btn" id="tab-btn-register" role="tab" aria-selected="false">
+                    Crear Cuenta
+                </button>
+            </div>
 
+            <div id="auth-alert" class="auth-alert" role="alert"></div>
+
+            <form id="client-auth-form" class="auth-form" novalidate>
+                <div class="form-group" id="group-fullname" style="display: none;">
+                    <label class="form-label" for="auth-fullname">Nombre completo *</label>
+                    <input type="text" id="auth-fullname" name="fullname" class="form-control" placeholder="Ej. Mariana Gómez" autocomplete="name">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Correo electrónico *</label>
+                    <input type="email" id="login-email" name="email" class="form-control" placeholder="tu@correo.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Contraseña *</label>
+                    <input type="password" id="login-password" name="password" class="form-control" placeholder="Mínimo 6 caracteres" required autocomplete="current-password">
+                </div>
+
+                <div class="form-group" id="group-confirm-password" style="display: none;">
+                    <label class="form-label" for="login-confirm-password">Confirmar contraseña *</label>
+                    <input type="password" id="login-confirm-password" name="password_confirm" class="form-control" placeholder="Repite tu contraseña" autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btn-auth-submit" style="width: 100%; margin-top: 0.35rem;">
+                    Iniciar Sesión 💅
+                </button>
+            </form>
+
+            <div class="auth-divider">o continúa con</div>
+
+            <button type="button" class="btn-google" id="btn-google-auth">
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.3-1.5 3.9-5.5 3.9-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.2-1.6H12z"/>
+                </svg>
+                Continuar con Google
+            </button>
+
+            <p class="auth-footer-note">
+                🔒 Tu sesión está protegida con Supabase Auth.
+            </p>
+        </section>
     </main>
 
     <!-- Scripts -->
     <script src="js/sounds.js"></script>
-    <script src="js/client-auth.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const redirectParam = params.get('redirect') || sessionStorage.getItem('yessy_return_url') || 'agendar.html';
+
+            // Si ya tiene sesión activa, redirigir directamente
+            if (window.YESSY_AUTH && window.YESSY_AUTH.isAuthenticated()) {
+                window.location.replace(redirectParam);
+                return;
+            }
+
+            let mode = 'login'; // 'login' | 'register'
+            const tabLogin = document.getElementById('tab-btn-login');
+            const tabRegister = document.getElementById('tab-btn-register');
+            const groupFullname = document.getElementById('group-fullname');
+            const groupConfirm = document.getElementById('group-confirm-password');
+            const heading = document.getElementById('auth-heading');
+            const subheading = document.getElementById('auth-subheading');
+            const submitBtn = document.getElementById('btn-auth-submit');
+            const passwordInput = document.getElementById('login-password');
+            const alertBox = document.getElementById('auth-alert');
+            const form = document.getElementById('client-auth-form');
+            const googleBtn = document.getElementById('btn-google-auth');
+
+            function showAlert(msg, type = 'error') {
+                alertBox.textContent = msg;
+                alertBox.className = 'auth-alert ' + type;
+                alertBox.style.display = 'block';
+            }
+
+            function hideAlert() {
+                alertBox.style.display = 'none';
+            }
+
+            function setMode(nextMode) {
+                mode = nextMode;
+                hideAlert();
+                const isRegister = mode === 'register';
+                tabLogin.classList.toggle('active', !isRegister);
+                tabRegister.classList.toggle('active', isRegister);
+                tabLogin.setAttribute('aria-selected', String(!isRegister));
+                tabRegister.setAttribute('aria-selected', String(isRegister));
+
+                groupFullname.style.display = isRegister ? 'block' : 'none';
+                groupConfirm.style.display = isRegister ? 'block' : 'none';
+                heading.textContent = isRegister ? 'Crear Cuenta' : 'Iniciar Sesión';
+                subheading.textContent = isRegister
+                    ? 'Regístrate en segundos para guardar tus datos y agendar más rápido.'
+                    : 'Accede para agendar tu cita, hacer pedidos o chatear con Yessica.';
+                submitBtn.textContent = isRegister ? 'Crear Cuenta ✨' : 'Iniciar Sesión 💅';
+                passwordInput.setAttribute('autocomplete', isRegister ? 'new-password' : 'current-password');
+            }
+
+            tabLogin.addEventListener('click', () => setMode('login'));
+            tabRegister.addEventListener('click', () => setMode('register'));
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideAlert();
+
+                const email = document.getElementById('login-email').value.trim();
+                const password = passwordInput.value;
+                const confirmPassword = document.getElementById('login-confirm-password').value;
+                const fullName = document.getElementById('auth-fullname').value.trim();
+
+                if (!email || !password) {
+                    showAlert('Por favor ingresa tu correo electrónico y contraseña.');
+                    return;
+                }
+
+                if (mode === 'register') {
+                    if (!fullName) {
+                        showAlert('Por favor ingresa tu nombre completo.');
+                        return;
+                    }
+                    if (password.length < 6) {
+                        showAlert('La contraseña debe tener al menos 6 caracteres.');
+                        return;
+                    }
+                    if (password !== confirmPassword) {
+                        showAlert('Las contraseñas no coinciden.');
+                        return;
+                    }
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = mode === 'register' ? 'Creando cuenta...' : 'Iniciando sesión...';
+
+                try {
+                    if (mode === 'register') {
+                        const data = await window.YESSY_AUTH.signUp(email, password, fullName);
+                        if (data && data.session) {
+                            sessionStorage.removeItem('yessy_return_url');
+                            window.location.replace(redirectParam);
+                            return;
+                        } else {
+                            showAlert('¡Cuenta creada! Revisa tu correo para confirmar tu cuenta y luego inicia sesión.', 'success');
+                            setMode('login');
+                        }
+                    } else {
+                        await window.YESSY_AUTH.signIn(email, password);
+                        sessionStorage.removeItem('yessy_return_url');
+                        window.location.replace(redirectParam);
+                        return;
+                    }
+                } catch (err) {
+                    showAlert(err.message || 'No se pudo completar la autenticación.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = mode === 'register' ? 'Crear Cuenta ✨' : 'Iniciar Sesión 💅';
+                }
+            });
+
+            googleBtn.addEventListener('click', async () => {
+                hideAlert();
+                googleBtn.disabled = true;
+                try {
+                    await window.YESSY_AUTH.signInWithGoogle(redirectParam);
+                } catch (err) {
+                    showAlert(err.message || 'No se pudo iniciar sesión con Google.');
+                    googleBtn.disabled = false;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

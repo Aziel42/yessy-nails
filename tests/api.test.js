@@ -51,6 +51,7 @@ jest.unstable_mockModule('../src/models/appointment.model.js', () => ({
     createAppointment: async (data) => ({ id: 99, ...data }),
     updateAppointment: async (id, data) => ({ id, ...data }),
     deleteAppointment: async () => true,
+    countActiveAppointments: async () => 0,
     autoCancelExpired: async () => []   // ahora devuelve array de citas canceladas
 }));
 
@@ -72,6 +73,22 @@ jest.unstable_mockModule('../src/models/pedido.model.js', () => ({
     getAllPedidos: async () => [],
     updatePedido: async (id, data) => ({ id, ...data }),
     deletePedido: async () => true
+}));
+
+jest.unstable_mockModule('../src/models/material.model.js', () => ({
+    getAllMaterials: async () => [
+        { id: 1, nombre: 'Gelish Rosa Nude #01', categoria: 'Barniz', color_hex: '#E6B8B8', stock_actual: 12, stock_minimo: 3, consumo_por_cita: 1, precio_extra: 0, activo: true },
+        { id: 8, nombre: 'Tips Coffin Cristal', categoria: 'Tip', color_hex: '#EAECEF', stock_actual: 0, stock_minimo: 3, consumo_por_cita: 1, precio_extra: 30, activo: true }
+    ],
+    getMaterialById: async (id) => {
+        if (id === 1) return { id: 1, nombre: 'Gelish Rosa Nude #01', categoria: 'Barniz', stock_actual: 12, stock_minimo: 3, consumo_por_cita: 1, precio_extra: 0, activo: true };
+        if (id === 8) return { id: 8, nombre: 'Tips Coffin Cristal', categoria: 'Tip', stock_actual: 0, stock_minimo: 3, consumo_por_cita: 1, precio_extra: 30, activo: true };
+        return null;
+    },
+    createMaterial: async (data) => ({ id: 99, ...data }),
+    updateMaterial: async (id, data) => ({ id, ...data }),
+    deleteMaterial: async () => true,
+    adjustMaterialStock: async (id, delta) => ({ id, stock_actual: Math.max(0, 12 + delta), stock_minimo: 3 })
 }));
 
 // Mockear Supabase Auth para el middleware de autenticación
@@ -149,5 +166,46 @@ describe('GET /api/citas (sin token de administrador)', () => {
     it('responde 401 cuando no hay token Bearer', async () => {
         const res = await request(app).get('/api/citas');
         expect(res.status).toBe(401);
+    });
+});
+
+// ── 7. GET /api/materiales ───────────────────────────────────────
+describe('GET /api/materiales', () => {
+    it('responde 200 con la lista de materiales activos', async () => {
+        const res = await request(app).get('/api/materiales');
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(Array.isArray(res.body.data)).toBe(true);
+        expect(res.body.data.length).toBeGreaterThan(0);
+    });
+});
+
+// ── 8. POST /api/materiales sin token → 401 ──────────────────────
+describe('POST /api/materiales (sin token de administrador)', () => {
+    it('responde 401 cuando no hay token Bearer', async () => {
+        const res = await request(app)
+            .post('/api/materiales')
+            .send({ nombre: 'Gelish Nuevo' });
+        expect(res.status).toBe(401);
+    });
+});
+
+// ── 9. POST /api/citas con material agotado → 409 ────────────────
+describe('POST /api/citas (material agotado)', () => {
+    it('responde 409 cuando un material seleccionado tiene stock_actual <= 0', async () => {
+        const res = await request(app)
+            .post('/api/citas')
+            .send({
+                nombre_cliente: 'Mariana Gómez',
+                telefono_cliente: '5512345678',
+                correo_cliente: 'mariana@example.com',
+                servicio_id: 1,
+                fecha_cita: '2027-05-20',
+                hora_cita: '11:30',
+                materiales_ids: [8]
+            })
+            .set('Content-Type', 'application/json');
+        expect(res.status).toBe(409);
+        expect(res.body.success).toBe(false);
     });
 });

@@ -103,6 +103,7 @@ const ADMIN_APP = {
 
         // Cargar pestaña inicial
         this.switchTab('citas');
+        this.loadMaterials();
         this.startBackgroundChatPolling();
     },
 
@@ -160,6 +161,12 @@ const ADMIN_APP = {
         const faqForm = document.getElementById('admin-faq-form');
         if (faqForm) {
             faqForm.addEventListener('submit', (e) => this.handleCreateFaq(e));
+        }
+
+        // Formulario de Inventario / Materiales
+        const matForm = document.getElementById('admin-material-form');
+        if (matForm) {
+            matForm.addEventListener('submit', (e) => this.handleCreateMaterial(e));
         }
     },
 
@@ -226,6 +233,9 @@ const ADMIN_APP = {
         if (tabId === 'servicios-portafolio') {
             this.loadServices();
             this.loadPortfolio();
+        }
+        if (tabId === 'inventario') {
+            this.loadMaterials();
         }
         if (tabId === 'pedidos-chat') {
             this.loadPedidos();
@@ -1417,6 +1427,188 @@ const ADMIN_APP = {
             }
         } catch (error) {
             this.showAlert(alertEl, 'Error de conexión al eliminar la pregunta frecuente.', 'error');
+        }
+    },
+
+    // ── GESTIÓN DE INVENTARIO Y MATERIALES ─────────────────────
+    async loadMaterials() {
+        const tbody = document.getElementById('materials-table-body');
+        const alertsContainer = document.getElementById('inventario-stock-alerts');
+        const badge = document.getElementById('admin-inventario-tab-badge');
+
+        try {
+            const res = await fetch('/api/materiales?incluir_inactivos=true');
+            const json = await res.json();
+            const materiales = json.data || [];
+
+            const agotados = materiales.filter(m => Number(m.stock_actual) <= 0);
+            const bajos = materiales.filter(m => Number(m.stock_actual) > 0 && Number(m.stock_actual) <= Number(m.stock_minimo));
+            const totalAlertas = agotados.length + bajos.length;
+
+            if (badge) {
+                badge.textContent = totalAlertas;
+                badge.style.display = totalAlertas > 0 ? 'inline-block' : 'none';
+            }
+
+            if (alertsContainer) {
+                const htmlParts = [];
+                if (agotados.length > 0) {
+                    htmlParts.push(`
+                        <div class="inv-alert-box danger">
+                            🚨 <strong>Materiales Agotados (${agotados.length}):</strong>
+                            ${agotados.map(m => this.escapeHTML(m.nombre)).join(', ')}.
+                            Las clientas no pueden seleccionarlos hasta que los reabastezcas.
+                        </div>
+                    `);
+                }
+                if (bajos.length > 0) {
+                    htmlParts.push(`
+                        <div class="inv-alert-box warning">
+                            ⚠️ <strong>Stock Bajo (${bajos.length}):</strong>
+                            ${bajos.map(m => `${this.escapeHTML(m.nombre)} (${m.stock_actual} rest.)`).join(', ')}.
+                        </div>
+                    `);
+                }
+                alertsContainer.innerHTML = htmlParts.join('');
+            }
+
+            if (!tbody) return;
+            if (materiales.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted);">No hay materiales registrados en el inventario.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = materiales.map(m => {
+                const stock = Number(m.stock_actual);
+                const minStock = Number(m.stock_minimo);
+                let badgeHtml = '<span class="badge badge-success">Disponible</span>';
+                if (stock <= 0) {
+                    badgeHtml = '<span class="badge badge-danger">Agotado</span>';
+                } else if (stock <= minStock) {
+                    badgeHtml = '<span class="badge badge-warning">Stock Bajo</span>';
+                }
+
+                return `
+                    <tr>
+                        <td>
+                            <span class="inv-swatch-dot" style="background-color: ${this.escapeHTML(m.color_hex || '#D4A5A5')};"></span>
+                            <strong>${this.escapeHTML(m.nombre)}</strong>
+                        </td>
+                        <td>${this.escapeHTML(m.categoria)}</td>
+                        <td><strong>${stock}</strong></td>
+                        <td>${minStock}</td>
+                        <td>${Number(m.consumo_por_cita || 1)}</td>
+                        <td>$${parseFloat(m.precio_extra || 0).toFixed(2)}</td>
+                        <td>${badgeHtml}</td>
+                        <td>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        style="background: #E8F5E9; color: #2E7D32; border-color: #A5D6A7;"
+                                        onclick="ADMIN_APP.restockMaterial(${Number(m.id)}, ${stock})">
+                                    +5 Reabastecer
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                        style="color: #C62828; border-color: #FFCDD2;"
+                                        onclick="ADMIN_APP.deleteMaterial(${Number(m.id)})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #C62828;">Error al cargar el inventario.</td></tr>';
+            }
+        }
+    },
+
+    async handleCreateMaterial(e) {
+        e.preventDefault();
+        const form = e.target;
+        const alertEl = document.getElementById('inventario-form-alert');
+        const btn = document.getElementById('btn-save-material');
+
+        const payload = {
+            nombre: form.nombre.value.trim(),
+            categoria: form.categoria.value,
+            color_hex: form.color_hex.value || '#D4A5A5',
+            stock_actual: Number(form.stock_actual.value) || 0,
+            stock_minimo: Number(form.stock_minimo.value) || 3,
+            consumo_por_cita: Math.max(1, Number(form.consumo_por_cita.value) || 1),
+            precio_extra: Number(form.precio_extra.value) || 0
+        };
+
+        if (!payload.nombre) {
+            this.showAlert(alertEl, 'Por favor escribe el nombre del material.', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+
+        try {
+            const res = await fetch('/api/materiales', {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+
+            if (json.success) {
+                this.showAlert(alertEl, '✅ Material agregado al inventario correctamente.', 'success');
+                form.reset();
+                form.color_hex.value = '#D4A5A5';
+                form.stock_actual.value = 10;
+                form.stock_minimo.value = 3;
+                form.consumo_por_cita.value = 1;
+                form.precio_extra.value = 0;
+                await this.loadMaterials();
+            } else {
+                this.showAlert(alertEl, json.message || 'No se pudo agregar el material.', 'error');
+            }
+        } catch (error) {
+            this.showAlert(alertEl, 'Error de conexión al guardar material.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '+ Agregar Insumo al Inventario 🎨';
+        }
+    },
+
+    async restockMaterial(id, currentStock) {
+        try {
+            const res = await fetch(`/api/materiales/${encodeURIComponent(id)}`, {
+                method: 'PUT',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ stock_actual: Number(currentStock) + 5 })
+            });
+            const json = await res.json();
+            if (json.success) {
+                await this.loadMaterials();
+            } else {
+                alert(json.message || 'No se pudo reabastecer el material.');
+            }
+        } catch (error) {
+            alert('Error de conexión al reabastecer.');
+        }
+    },
+
+    async deleteMaterial(id) {
+        if (!confirm('¿Estás segura de eliminar este material del inventario?')) return;
+        try {
+            const res = await fetch(`/api/materiales/${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                headers: this.getAuthHeaders()
+            });
+            const json = await res.json();
+            if (json.success) {
+                await this.loadMaterials();
+            } else {
+                alert(json.message || 'No se pudo eliminar el material.');
+            }
+        } catch (error) {
+            alert('Error de conexión al eliminar material.');
         }
     },
 

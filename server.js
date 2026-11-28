@@ -23,6 +23,7 @@ import adminRoutes       from './src/routes/admin.routes.js';
 import uploadRoutes      from './src/routes/upload.routes.js';
 import pedidoRoutes      from './src/routes/pedido.routes.js';
 import clienteRoutes    from './src/routes/cliente.routes.js';
+import materialRoutes    from './src/routes/material.routes.js';
 
 // Middlewares de error
 import { errorMiddleware, notFoundMiddleware } from './src/middlewares/error.middleware.js';
@@ -55,8 +56,8 @@ app.use((_req, res, next) => {
         'Content-Security-Policy',
         [
             "default-src 'self'",
-            // Scripts: propios + Leaflet CDN
-            "script-src 'self' 'unsafe-inline' https://unpkg.com",
+            // Scripts: propios + Leaflet CDN + Supabase CDN
+            "script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net",
             // Estilos: propios + Leaflet CDN + Google Fonts
             "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
             // Fuentes: Google Fonts
@@ -98,6 +99,7 @@ app.use('/api/admin',       adminRoutes);
 app.use('/api/upload',      uploadRoutes);
 app.use('/api/pedidos',     pedidoRoutes);
 app.use('/api/clientes',   clienteRoutes);
+app.use('/api/materiales',  materialRoutes);
 
 // ── Ruta raíz de la API (info) ───────────────────────────────────
 app.get('/api', (_req, res) => {

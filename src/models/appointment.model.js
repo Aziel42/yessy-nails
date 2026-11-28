@@ -14,7 +14,8 @@ const ALLOWED_FIELDS = [
     'cliente_id', 'nombre_cliente', 'correo_cliente', 'telefono_cliente', 'servicio_id',
     'fecha_cita', 'hora_cita', 'notas_diseno', 'total_estimado',
     'anticipo_requerido', 'metodo_pago', 'folio_transferencia',
-    'estado_confirmacion_cliente', 'estado_cita', 'estado_pago'
+    'estado_confirmacion_cliente', 'estado_cita', 'estado_pago',
+    'materiales_ids', 'materiales_seleccionados'
 ];
 
 function buildPayload(data) {
@@ -75,11 +76,25 @@ export async function getAppointmentById(id) {
  * @param {object} data - Datos de la cita
  */
 export async function createAppointment(data) {
-    const { data: created, error } = await supabaseAdmin
+    const payload = buildPayload(data);
+    let { data: created, error } = await supabaseAdmin
         .from(TABLE)
-        .insert(buildPayload(data))
+        .insert(payload)
         .select(SELECT_WITH_SERVICE)
         .single();
+
+    // Respaldo si las columnas materiales_ids / materiales_seleccionados aún no existen en Supabase
+    if (error && (error.message.includes('materiales_ids') || error.message.includes('materiales_seleccionados'))) {
+        delete payload.materiales_ids;
+        delete payload.materiales_seleccionados;
+        const retry = await supabaseAdmin
+            .from(TABLE)
+            .insert(payload)
+            .select(SELECT_WITH_SERVICE)
+            .single();
+        created = retry.data;
+        error = retry.error;
+    }
 
     if (error) throw new Error(error.message);
     return flatten(created);
@@ -187,7 +202,7 @@ export async function autoCancelExpired(hoursLimit = 24) {
         .not('metodo_pago', 'in', '("efectivo","sucursal","transferencia")')
         .not('estado_pago', 'in', '("Sin anticipo (Pago en sucursal)","Anticipo vía transferencia")')
         .lt('fecha_creacion', cutoff)
-        .select('id, nombre_cliente, correo_cliente, fecha_cita, hora_cita');
+        .select('id, nombre_cliente, correo_cliente, fecha_cita, hora_cita, materiales_ids');
 
     if (error) throw new Error(error.message);
     return data || [];

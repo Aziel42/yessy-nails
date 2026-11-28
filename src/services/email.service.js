@@ -270,6 +270,36 @@ export function buildOfferEmail(mensaje, clientaNombre = '') {
     return { subject: '✨ Promoción del mes — Yessy Nails', html: wrapEmail('Promoción especial para ti', body) };
 }
 
+export function buildLowStockAdminEmail(materialesAlerta = []) {
+    const rows = materialesAlerta.map(m => {
+        const agotado = Number(m.stock_actual) <= 0;
+        const badge = agotado
+            ? '<span style="background:#FFEBEE;color:#C62828;padding:2px 8px;border-radius:10px;font-weight:700;font-size:12px;">AGOTADO</span>'
+            : '<span style="background:#FFF8E1;color:#E65100;padding:2px 8px;border-radius:10px;font-weight:700;font-size:12px;">STOCK BAJO</span>';
+        return `<tr>
+            <td style="padding:8px 6px;border-bottom:1px solid #EFE3E0;"><strong>${m.nombre}</strong> <small style="color:#8A7A76;">(${m.categoria})</small></td>
+            <td style="padding:8px 6px;border-bottom:1px solid #EFE3E0;text-align:center;">${m.stock_actual} / mín. ${m.stock_minimo}</td>
+            <td style="padding:8px 6px;border-bottom:1px solid #EFE3E0;text-align:right;">${badge}</td>
+        </tr>`;
+    }).join('');
+
+    const body = `
+      <p>⚠️ Alerta automática de inventario tras una nueva cita:</p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+        <thead>
+          <tr style="background:#FAF2EC;">
+            <th style="padding:8px 6px;text-align:left;">Material</th>
+            <th style="padding:8px 6px;text-align:center;">Stock</th>
+            <th style="padding:8px 6px;text-align:right;">Estado</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="font-size:13px;color:#8A7A76;">Ingresa a <strong>/admin</strong> (pestaña Inventario y Materiales) para reabastecer con un clic.</p>
+    `;
+    return { subject: '⚠️ Alerta de Stock Bajo / Agotado — Yessy Nails', html: wrapEmail('Alerta de Inventario', body) };
+}
+
 export default {
     isEmailConfigured,
     getAdminEmail,
@@ -279,5 +309,6 @@ export default {
     buildAppointmentCancelledEmail,
     buildOrderClientEmail,
     buildOrderAdminEmail,
-    buildOfferEmail
+    buildOfferEmail,
+    buildLowStockAdminEmail
 };

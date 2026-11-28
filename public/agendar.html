@@ -22,6 +22,226 @@
 
     <!-- Estilos -->
     <link rel="stylesheet" href="styles.css">
+    <script src="js/client-auth.js"></script>
+    <script>
+        if (window.YESSY_AUTH) {
+            window.YESSY_AUTH.requireAuth();
+        }
+    </script>
+    <style>
+        /* Configurador en 2 Pasos */
+        .wizard-stepper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            background: #FAF2EC;
+            padding: 0.5rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--color-border);
+        }
+        .wizard-step-pill {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1rem;
+            border-radius: var(--radius-full);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            transition: var(--transition);
+        }
+        .wizard-step-pill.active {
+            background: #FFFFFF;
+            color: var(--color-accent-dark);
+            box-shadow: var(--shadow-sm);
+        }
+        .wizard-step-pill.completed {
+            color: #2E7D32;
+        }
+        .services-visual-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .service-pick-card {
+            background: #FFFFFF;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .service-pick-card:hover {
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        .service-pick-card.selected {
+            border-color: var(--color-accent);
+            background: #FFFAF5;
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+        }
+        .service-pick-cat {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--color-primary-dark);
+        }
+        .service-pick-title {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin: 0;
+        }
+        .service-pick-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            padding-top: 0.4rem;
+            border-top: 1px dashed var(--color-border);
+        }
+        .service-pick-price {
+            font-weight: 700;
+            color: var(--color-accent-dark);
+        }
+        .step1-summary-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            background: linear-gradient(135deg, #FAF2EC 0%, #F7EAEA 100%);
+            border: 1.5px solid var(--color-border-gold);
+            border-radius: var(--radius-md);
+            padding: 1.1rem 1.35rem;
+            margin-bottom: 1.5rem;
+        }
+        .stock-banner {
+            display: none;
+            padding: 0.85rem 1.15rem;
+            border-radius: var(--radius-md);
+            background: #FFF8E1;
+            border: 1.5px solid #FFD54F;
+            color: #7A4F01;
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+        .materials-filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .mat-filter-btn {
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--color-border);
+            background: #FFFFFF;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .mat-filter-btn.active {
+            background: var(--color-accent-dark);
+            border-color: var(--color-accent-dark);
+            color: #FFFFFF;
+        }
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        .material-card {
+            background: #FFFFFF;
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            text-align: left;
+            position: relative;
+        }
+        .material-card:hover:not(.is-out) {
+            border-color: var(--color-primary);
+            transform: translateY(-2px);
+        }
+        .material-card.selected {
+            border-color: var(--color-accent);
+            background: #FFFAF5;
+            box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.22);
+        }
+        .material-card.is-out {
+            background: #F4F2F1;
+            border-color: #E0DCDA;
+            opacity: 0.65;
+            cursor: not-allowed;
+            filter: grayscale(0.4);
+        }
+        .material-card-top {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .material-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(74, 63, 63, 0.2);
+            flex-shrink: 0;
+        }
+        .material-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--color-text);
+            line-height: 1.25;
+        }
+        .material-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+        }
+        .stock-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.15rem 0.55rem;
+            border-radius: var(--radius-full);
+        }
+        .stock-badge.ok { background: #E8F5E9; color: #2E7D32; }
+        .stock-badge.low { background: #FFF8E1; color: #E65100; }
+        .stock-badge.out { background: #ECEFF1; color: #607D8B; }
+        .step2-summary-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            background: #FAF2EC;
+            border: 1.5px solid var(--color-border-gold);
+            border-radius: var(--radius-md);
+            padding: 0.95rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
 </head>
 <body>
 
@@ -95,52 +315,140 @@
                 </div>
             </div>
 
+            <!-- Stepper del Configurador en 2 Pasos -->
+            <div class="wizard-stepper" aria-label="Pasos para agendar">
+                <div class="wizard-step-pill active" id="wizard-step-1-pill">
+                    <span>1️⃣</span> Paso 1: Servicio Base
+                </div>
+                <div class="wizard-step-pill" id="wizard-step-2-pill">
+                    <span>2️⃣</span> Paso 2: Materiales, Fecha y Pago
+                </div>
+            </div>
+
             <!-- Formulario de Cita -->
             <form id="appointment-form" novalidate>
-                
-                <!-- Sección 1: Datos Personales -->
-                <div style="margin-bottom: 2.25rem;">
-                    <h3 class="form-section-title">
-                        <span>👤</span> Datos de la Clienta
-                    </h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="nombre_cliente">Nombre y Apellido *</label>
-                            <input type="text" id="nombre_cliente" name="nombre_cliente" class="form-control" placeholder="Ej. Mariana Gómez Torres" required>
+
+                <!-- ====================================================
+                     PASO 1: ELEGIR SERVICIO O DISEÑO BASE
+                     ==================================================== -->
+                <div id="booking-step-1">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 class="form-section-title">
+                            <span>💅</span> Paso 1: Elige tu Servicio o Técnica Base
+                        </h3>
+                        <p style="font-size: 0.9rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+                            Selecciona el servicio principal para ver su precio base y duración estimada.
+                        </p>
+
+                        <!-- Tarjetas visuales de servicios -->
+                        <div class="services-visual-grid" id="services-cards-grid">
+                            <p style="color: var(--color-text-muted); font-size: 0.9rem;">Cargando servicios...</p>
                         </div>
+
+                        <!-- Select sincronizado (para accesibilidad y compatibilidad con cotizador) -->
                         <div class="form-group">
-                            <label class="form-label" for="telefono_cliente">Teléfono / WhatsApp *</label>
-                            <input type="tel" id="telefono_cliente" name="telefono_cliente" class="form-control" placeholder="Ej. 55 8743 1290" required>
+                            <label class="form-label" for="servicio_id">Técnica o Tratamiento seleccionado *</label>
+                            <select id="servicio_id" name="servicio_id" class="form-control" required>
+                                <option value="" disabled selected>Cargando menú de servicios...</option>
+                            </select>
+                            <small style="display: block; margin-top: 0.4rem; color: var(--color-text-muted); font-size: 0.82rem;">
+                                ¿Aún no decides? Explora nuestro <a href="portafolio.html" style="color: var(--color-accent-dark); text-decoration: underline;">portafolio de diseños</a>.
+                            </small>
                         </div>
                     </div>
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label" for="correo">Correo Electrónico *</label>
-                        <input type="email" id="correo" name="correo" class="form-control"
-                               placeholder="Ej. mariana@gmail.com" required
-                               autocomplete="email">
-                        <small style="display:block; margin-top:0.35rem; color:var(--color-text-muted); font-size:0.8rem;">
-                            Te enviaremos la confirmación de tu cita e instrucciones de anticipo a este correo.
-                        </small>
+
+                    <!-- Resumen visual del servicio elegido -->
+                    <div class="step1-summary-box" id="step1-service-summary" style="display: none;">
+                        <div>
+                            <span style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; color: var(--color-accent-dark);">Servicio Seleccionado</span>
+                            <h4 id="step1-summary-name" style="margin: 0.2rem 0; font-size: 1.2rem;">—</h4>
+                            <span id="step1-summary-duration" style="font-size: 0.85rem; color: var(--color-text-muted);">⏱️ 0 min</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.76rem; color: var(--color-text-muted); text-transform: uppercase;">Precio Base</span>
+                            <div id="step1-summary-price" style="font-family: var(--font-heading); font-size: 1.65rem; font-weight: 700; color: var(--color-accent-dark);">$0.00 MXN</div>
+                        </div>
                     </div>
+
+                    <button type="button" class="btn btn-primary" id="btn-next-step-2" style="width: 100%; font-size: 1.05rem; padding: 1rem;">
+                        Continuar al Paso 2: Tonos y Materiales →
+                    </button>
                 </div>
 
-                <!-- Sección 2: Selección de Servicio -->
-                <div style="margin-bottom: 2.25rem;">
-                    <h3 class="form-section-title">
-                        <span>💅</span> Servicio Deseado
-                    </h3>
-                    <div class="form-group">
-                        <label class="form-label" for="servicio_id">Técnica o Tratamiento *</label>
-                        <select id="servicio_id" name="servicio_id" class="form-control" required>
-                            <option value="" disabled selected>Cargando menú de servicios...</option>
-                        </select>
-                        <small style="display: block; margin-top: 0.4rem; color: var(--color-text-muted); font-size: 0.82rem;">
-                            ¿Aún no decides? Puedes explorar fotos en nuestro <a href="portafolio.html" style="color: var(--color-accent-dark); text-decoration: underline;">portafolio de diseños</a>.
-                        </small>
-                    </div>
-                </div>
+                <!-- ====================================================
+                     PASO 2: MATERIALES, DATOS, FECHA Y PAGO
+                     ==================================================== -->
+                <div id="booking-step-2" style="display: none;">
 
-                <!-- Sección 3: Fecha y Horario -->
+                    <!-- Barra resumen superior del Paso 2 -->
+                    <div class="step2-summary-bar">
+                        <div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-back-step-1" style="margin-bottom: 0.4rem;">
+                                ← Cambiar Servicio
+                            </button>
+                            <div style="font-size: 0.9rem;">
+                                <strong id="step2-service-name">—</strong>
+                                <span id="step2-materials-count" style="color: var(--color-text-muted); margin-left: 0.4rem;">(0 materiales extra)</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="font-size: 0.75rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Total Estimado</span>
+                            <div id="step2-total-estimado" style="font-family: var(--font-heading); font-size: 1.65rem; font-weight: 700; color: var(--color-accent-dark);">$0.00 MXN</div>
+                        </div>
+                    </div>
+
+                    <!-- Banner informativo de stock bajo / agotado -->
+                    <div class="stock-banner" id="stock-info-banner"></div>
+
+                    <!-- Selector interactivo de materiales y tonos -->
+                    <div style="margin-bottom: 2.25rem;" id="materials-configurator">
+                        <h3 class="form-section-title">
+                            <span>🎨</span> Paso 2: Elige Tonos, Acrílicos y Decoración (Opcional)
+                        </h3>
+                        <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 0.9rem;">
+                            El stock se verifica en tiempo real. Los tonos agotados aparecen bloqueados y los extras se suman automáticamente al total.
+                        </p>
+
+                        <div class="materials-filter-bar" id="materials-filter-bar">
+                            <button type="button" class="mat-filter-btn active" data-cat="todos">Todos</button>
+                            <button type="button" class="mat-filter-btn" data-cat="Barniz">Barnices</button>
+                            <button type="button" class="mat-filter-btn" data-cat="Acrílico">Acrílicos</button>
+                            <button type="button" class="mat-filter-btn" data-cat="Tip">Tips</button>
+                            <button type="button" class="mat-filter-btn" data-cat="Decoración">Decoración</button>
+                        </div>
+
+                        <div class="materials-grid" id="materials-grid">
+                            <p style="color: var(--color-text-muted); font-size: 0.9rem;">Cargando inventario en tiempo real...</p>
+                        </div>
+                    </div>
+
+                    <!-- Sección 1: Datos Personales -->
+                    <div style="margin-bottom: 2.25rem;">
+                        <h3 class="form-section-title">
+                            <span>👤</span> Datos de la Clienta
+                        </h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="nombre_cliente">Nombre y Apellido *</label>
+                                <input type="text" id="nombre_cliente" name="nombre_cliente" class="form-control" placeholder="Ej. Mariana Gómez Torres" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="telefono_cliente">Teléfono / WhatsApp *</label>
+                                <input type="tel" id="telefono_cliente" name="telefono_cliente" class="form-control" placeholder="Ej. 55 8743 1290" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label" for="correo">Correo Electrónico *</label>
+                            <input type="email" id="correo" name="correo" class="form-control"
+                                   placeholder="Ej. mariana@gmail.com" required
+                                   autocomplete="email">
+                            <small style="display:block; margin-top:0.35rem; color:var(--color-text-muted); font-size:0.8rem;">
+                                Te enviaremos la confirmación de tu cita e instrucciones de anticipo a este correo.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Sección 3: Fecha y Horario -->
                 <div style="margin-bottom: 2.25rem;">
                     <h3 class="form-section-title">
                         <span>📅</span> Fecha y Horario
@@ -338,6 +646,7 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.08rem; padding: 1.1rem;" id="btn-submit-booking">
                     Confirmar y Solicitar Cita 💅
                 </button>
+                </div><!-- /booking-step-2 -->
             </form>
         </div>
 
@@ -505,7 +814,6 @@
 
     <!-- Scripts -->
     <script src="js/sounds.js"></script>
-    <script src="js/client-auth.js"></script>
     <script src="js/main.js"></script>
     <script src="js/agendar.js"></script>
     <script src="js/chat.js"></script>
